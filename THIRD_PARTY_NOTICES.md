@@ -21,7 +21,7 @@ of use apply.
 | [OpenFreeMap](https://openfreemap.org) (vector tiles, styles Liberty, Bright, Positron, Dark, Fiord) | Project MIT; tile schema and styles based on [OpenMapTiles](https://openmaptiles.org) (code BSD-3-Clause, design CC BY 4.0) | © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors |
 | Fonts (Noto Sans, via OpenFreeMap) | [SIL Open Font License 1.1](https://openfontlicense.org) | – |
 | OpenStreetMap raster tiles (`tile.openstreetmap.org`) | Data ODbL; [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) | © OpenStreetMap contributors |
-| [EOxCloudless / Sentinel-2 cloudless 2016](https://cloudless.eox.at) by EOX IT Services GmbH | The 2016 layer was published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); current [EOX license terms](https://cloudless.eox.at/documentation/license): non-commercial use under CC BY-NC-SA 4.0, commercial use only with an EOX license | EOxCloudless – https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
+| [EOxCloudless / Sentinel-2 cloudless 2016](https://cloudless.eox.at) by EOX IT Services GmbH | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) for the 2016 layer used here (2018–2025 layers: CC BY-NC-SA 4.0); direct use of the WMTS endpoint in applications is permitted ([EOX pricing / free use](https://cloudless.eox.at/pricing)) | EOxCloudless – https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
 
 The required attribution of the selected map style is burned into every
 exported image and video (bottom right).

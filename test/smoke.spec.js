@@ -78,6 +78,8 @@ test('Video-Export mit OSM-Rasterstil gesperrt', async ({ page }) => {
     await page.route('https://tile.openstreetmap.org/**', (r) => r.abort());
     await page.goto('/index.html');
     await page.click('#demo');
+    // Abschnitt „Animation & Video“ ist standardmäßig zugeklappt
+    await page.locator('summary', { hasText: 'Animation' }).click();
     await expect(page.locator('#vid-export')).toBeEnabled();
     await expect(page.locator('#vid-style-hint')).toBeHidden();
 
