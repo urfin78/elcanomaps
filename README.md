@@ -2,6 +2,8 @@
 
 [![JS syntax](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml) [![Smoke tests](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml) [![Export self-test](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml)
 
+> This project was fully created using [Claude Code](https://claude.ai/claude-code) by Anthropic.
+
 Travel routes as images and animated videos – right in the browser, no server,
 no build step, using open data from OpenStreetMap.
 
