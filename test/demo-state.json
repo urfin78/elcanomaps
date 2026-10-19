@@ -1,0 +1,19 @@
+{
+    "stops": [
+        { "name": "Hamburg", "lng": 9.9937, "lat": 53.5511 },
+        { "name": "Berlin", "lng": 13.405, "lat": 52.52 },
+        { "name": "Prag", "lng": 14.4378, "lat": 50.0755 },
+        { "name": "Wien", "lng": 16.3738, "lat": 48.2082 },
+        { "name": "Lissabon", "lng": -9.1393, "lat": 38.7223 },
+        { "name": "Sintra", "lng": -9.3817, "lat": 38.8029 }
+    ],
+    "segments": [
+        { "mode": "train" },
+        { "mode": "car" },
+        { "mode": "car" },
+        { "mode": "flight" },
+        { "mode": "bike" }
+    ],
+    "title": "Europa-Reise 2026",
+    "colorByMode": true
+}

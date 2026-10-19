@@ -1,0 +1,16 @@
+# Lokale Testartefakte (Chrome-Profil, Screenshots, Exporte)
+.test/
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# Lokale Claude-Code-Einstellungen und -Anweisungen
+.claude/
+CLAUDE.md
+
+# Interne Planung
+PROJECT_PLAN.md
+
+# Python
+__pycache__/

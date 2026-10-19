@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>ElcanoMaps Selbsttest</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+</head>
+<body>
+    <!--
+        Durchläuft Routing, Bild- und Video-Export ohne UI.
+        Parameter: ?style=<id>&camera=follow|overview&type=mp4|webm
+        Ergebnis steht in #out und wird an den Testserver (test/server.py) hochgeladen.
+    -->
+    <pre id="out">running</pre>
+    <script type="module">
+        import { sanitize } from '../js/state.js';
+        import { buildRoute } from '../js/routing.js';
+        import { renderImage, renderVideo } from '../js/export.js';
+
+        const params = new URLSearchParams(location.search);
+        const out = {};
+        const log = (key, value) => {
+            out[key] = value;
+            document.getElementById('out').textContent = JSON.stringify(out);
+        };
+        const upload = (name, body) => fetch(`/upload/${name}`, { method: 'POST', body }).catch(() => {});
+        // Konsolenfehler mitprotokollieren
+        const consoleErrors = [];
+        const origError = console.error;
+        console.error = (...args) => {
+            consoleErrors.push(args.map(String).join(' ').slice(0, 300));
+            origError(...args);
+        };
+        addEventListener('error', (e) => consoleErrors.push(String(e.message)));
+
+        try {
+            const s = sanitize({
+                stops: [
+                    { name: 'Hamburg', lng: 9.9937, lat: 53.5511 },
+                    { name: 'Berlin', lng: 13.405, lat: 52.52 },
+                    { name: 'Prag', lng: 14.4378, lat: 50.0755 },
+                    { name: 'Lissabon', lng: -9.1393, lat: 38.7223 },
+                ],
+                segments: [{ mode: 'train' }, { mode: 'car' }, { mode: 'flight' }],
+                title: 'Selbsttest',
+                style: params.get('style') || 'liberty',
+            });
+
+            let t0 = performance.now();
+            const route = await buildRoute(s);
+            log('route', {
+                ms: Math.round(performance.now() - t0),
+                km: Math.round(route.length),
+                errors: route.errors,
+                segments: route.segments.map((x) => ({ mode: x.mode, points: x.coords.length, km: Math.round(x.length) })),
+            });
+
+            t0 = performance.now();
+            const img = await renderImage(s, route, { width: 1080, height: 1350, type: 'image/png' });
+            log('image', { ms: Math.round(performance.now() - t0), bytes: img.size, type: img.type });
+            await upload('export.png', img);
+
+            t0 = performance.now();
+            let frames = 0;
+            const vid = await renderVideo(s, route, {
+                width: 640,
+                height: 360,
+                fps: 10,
+                duration: 4,
+                camera: params.get('camera') || 'follow',
+                type: params.get('type') || 'mp4',
+            }, {
+                onProgress: () => frames++,
+                // Einzelbilder zur Sichtprüfung hochladen
+                onFrame: async (canvas, i, total) => {
+                    if (![0, Math.floor(total / 3), Math.floor(total * 2 / 3), total - 1].includes(i)) return;
+                    const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+                    await upload(`export.frame${String(i).padStart(3, '0')}.png`, blob);
+                },
+            });
+            log('video', { ms: Math.round(performance.now() - t0), frames, bytes: vid.blob.size, type: vid.blob.type, ext: vid.extension });
+            await upload(`export${vid.extension}`, vid.blob);
+        } catch (e) {
+            log('error', String(e.stack || e));
+        }
+        log('consoleErrors', consoleErrors);
+        await upload('result.json', JSON.stringify(out));
+    </script>
+</body>
+</html>

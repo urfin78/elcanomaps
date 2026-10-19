@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ElcanoMaps – Reiserouten als Bild & Video</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+    <aside id="sidebar">
+        <header>
+            <h1>ElcanoMaps</h1>
+            <p class="muted">Reiserouten als Bild &amp; Video</p>
+        </header>
+
+        <details open>
+            <summary>Route</summary>
+            <div class="search">
+                <input id="search" type="search" placeholder="Ort suchen und hinzufügen …" autocomplete="off" aria-label="Ort suchen">
+                <ul id="search-results" hidden></ul>
+            </div>
+            <div id="stops"></div>
+            <p id="empty-hint" class="muted">
+                Noch keine Stopps. Suche einen Ort oder
+                <button type="button" id="demo" class="link">lade eine Beispielroute</button>.
+            </p>
+            <p id="route-status" class="muted"></p>
+        </details>
+
+        <details open>
+            <summary>Karte</summary>
+            <label>Kartenstil <select id="style"></select></label>
+            <label>Titel <input type="text" id="title" placeholder="z. B. Roadtrip 2026" maxlength="200"></label>
+            <label class="check"><input type="checkbox" id="show-labels"> Ortsnamen anzeigen</label>
+            <label class="check"><input type="checkbox" id="color-by-mode"> Farbe nach Verkehrsmittel</label>
+            <label id="line-color-row">Routenfarbe <input type="color" id="line-color"></label>
+        </details>
+
+        <details>
+            <summary>Bild-Export</summary>
+            <label>Format <select id="img-preset"></select></label>
+            <div class="row">
+                <label>Breite <input type="number" id="img-width" min="100" max="8000" step="1"></label>
+                <label>Höhe <input type="number" id="img-height" min="100" max="8000" step="1"></label>
+            </div>
+            <label>Dateityp
+                <select id="img-type">
+                    <option value="image/png">PNG</option>
+                    <option value="image/jpeg">JPEG</option>
+                    <option value="image/webp">WebP</option>
+                </select>
+            </label>
+            <button type="button" id="img-export" class="primary">Bild exportieren</button>
+        </details>
+
+        <details>
+            <summary>Animation &amp; Video</summary>
+            <label>Format <select id="vid-preset"></select></label>
+            <label>Kamera
+                <select id="vid-camera">
+                    <option value="follow">Fahrzeug folgen</option>
+                    <option value="overview">Gesamtansicht</option>
+                </select>
+            </label>
+            <div class="row">
+                <label>Dauer (s) <input type="number" id="vid-duration" min="3" max="120" step="1"></label>
+                <label>FPS
+                    <select id="vid-fps">
+                        <option value="24">24</option>
+                        <option value="30">30</option>
+                        <option value="60">60</option>
+                    </select>
+                </label>
+            </div>
+            <label>Dateityp
+                <select id="vid-type">
+                    <option value="mp4">MP4</option>
+                    <option value="webm">WebM</option>
+                </select>
+            </label>
+            <div class="row">
+                <button type="button" id="preview">▶ Vorschau</button>
+                <button type="button" id="vid-export" class="primary">Video exportieren</button>
+            </div>
+            <progress id="vid-progress" max="1" value="0" hidden></progress>
+            <p class="muted small">Während des Exports den Tab im Vordergrund lassen.</p>
+        </details>
+
+        <details>
+            <summary>Speichern &amp; Teilen</summary>
+            <div class="row wrap">
+                <button type="button" id="share">Link kopieren</button>
+                <button type="button" id="save-json">JSON speichern</button>
+                <button type="button" id="load-json">JSON laden</button>
+                <button type="button" id="save-geojson">GeoJSON</button>
+                <button type="button" id="clear" class="danger">Route leeren</button>
+            </div>
+            <input type="file" id="file" accept=".json,application/json" hidden>
+        </details>
+
+        <footer class="muted small">
+            Kartendaten © OpenStreetMap-Mitwirkende · Suche: Photon (komoot) ·
+            Routing: FOSSGIS OSRM · Karten: OpenFreeMap, EOX ·
+            <a href="THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Lizenzen</a>
+        </footer>
+    </aside>
+    <main id="map"></main>
+    <div id="toast" role="status" hidden></div>
+</body>
+</html>
