@@ -1,41 +1,43 @@
-# Komponenten, Daten und Dienste Dritter
+# Third-party components, data and services
 
-Der eigene Code von ElcanoMaps steht unter der [MIT-Lizenz](LICENSE).
-ElcanoMaps enthält selbst **keinen** Fremdcode im Repository. Die unten genannten
-Bibliotheken werden zur Laufzeit unverändert per CDN geladen, Kartendaten und
-Dienste werden direkt vom Browser der Nutzer abgefragt. Für diese gelten die
-jeweiligen Lizenzen und Nutzungsbedingungen.
+ElcanoMaps' own code is licensed under the [MIT License](LICENSE).
+The repository itself contains **no** third-party code. The libraries listed
+below are loaded unmodified from a CDN at runtime; map data and services are
+requested directly by the user's browser. Their respective licenses and terms
+of use apply.
 
-## Bibliotheken (per CDN, unverändert)
+## Libraries (via CDN, unmodified)
 
-| Komponente | Version | Lizenz | Quelle | Eingebunden über |
+| Component | Version | License | Source | Loaded via |
 | :--- | :--- | :--- | :--- | :--- |
 | MapLibre GL JS | 5.24.0 | BSD-3-Clause | <https://github.com/maplibre/maplibre-gl-js> | `unpkg.com` (`index.html`) |
-| Mediabunny | 1.61.6 | MPL-2.0 | <https://github.com/Vanilagy/mediabunny> | `unpkg.com`, erst beim Video-Export (`js/export.js`) |
+| Mediabunny | 1.61.6 | MPL-2.0 | <https://github.com/Vanilagy/mediabunny> | `unpkg.com`, only when exporting a video (`js/export.js`) |
 
-## Kartendaten und Kartenstile
+## Map data and map styles
 
-| Quelle | Lizenz / Bedingungen | Pflichtangabe |
+| Source | License / terms | Required attribution |
 | :--- | :--- | :--- |
-| OpenStreetMap-Daten | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) | © OpenStreetMap contributors |
-| [OpenFreeMap](https://openfreemap.org) (Vektorkacheln, Stile Liberty, Bright, Positron, Dark, Fiord) | Projekt MIT; Kachelschema und Stile auf Basis von [OpenMapTiles](https://openmaptiles.org) (Code BSD-3-Clause, Design CC BY 4.0) | © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors |
-| Schriften (Noto Sans, über OpenFreeMap) | [SIL Open Font License 1.1](https://openfontlicense.org) | – |
-| OpenStreetMap-Rasterkacheln (`tile.openstreetmap.org`) | Daten ODbL; [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) | © OpenStreetMap contributors |
-| [Sentinel-2 cloudless 2016](https://s2maps.eu) von EOX IT Services GmbH | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Sentinel-2 cloudless – s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
+| OpenStreetMap data | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) | © OpenStreetMap contributors |
+| [OpenFreeMap](https://openfreemap.org) (vector tiles, styles Liberty, Bright, Positron, Dark, Fiord) | Project MIT; tile schema and styles based on [OpenMapTiles](https://openmaptiles.org) (code BSD-3-Clause, design CC BY 4.0) | © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors |
+| Fonts (Noto Sans, via OpenFreeMap) | [SIL Open Font License 1.1](https://openfontlicense.org) | – |
+| OpenStreetMap raster tiles (`tile.openstreetmap.org`) | Data ODbL; [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) | © OpenStreetMap contributors |
+| [Sentinel-2 cloudless 2016](https://s2maps.eu) by EOX IT Services GmbH | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Sentinel-2 cloudless – s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
 
-Die Pflichtangabe des gewählten Kartenstils wird in jedes exportierte Bild und
-Video eingebrannt (unten rechts).
+The required attribution of the selected map style is burned into every
+exported image and video (bottom right).
 
-## Dienste
+## Services
 
-| Dienst | Software-Lizenz | Daten | Nutzungsbedingungen |
+| Service | Software license | Data | Terms of use |
 | :--- | :--- | :--- | :--- |
-| [Photon](https://photon.komoot.io) (Ortssuche, betrieben von komoot) | Apache-2.0 | OpenStreetMap (ODbL) | Faire Nutzung, keine Massenabfragen |
-| [FOSSGIS OSRM](https://routing.openstreetmap.de) (Routing Auto/Rad/Fuß) | OSRM: BSD-2-Clause | OpenStreetMap (ODbL) | [Nutzungsbedingungen FOSSGIS](https://routing.openstreetmap.de/about.html) |
+| [Photon](https://photon.komoot.io) (place search, operated by komoot) | Apache-2.0 | OpenStreetMap (ODbL) | Fair use, no bulk requests |
+| [FOSSGIS OSRM](https://routing.openstreetmap.de) (routing for car/bike/foot) | OSRM: BSD-2-Clause | OpenStreetMap (ODbL) | [FOSSGIS terms of use](https://routing.openstreetmap.de/about.html) |
 
-## Sonstiges
+## Other
 
-- **Fahrzeug-Icons** sind Emojis aus der Systemschrift des jeweiligen Geräts; es
-  werden keine Emoji-Grafiken mit ausgeliefert.
-- **Testwerkzeuge** (`test/`) nutzen nur die Python-Standardbibliothek und ein
-  lokal installiertes Google Chrome; beides wird nicht mit ausgeliefert.
+- **Vehicle icons** are emojis from the system font of the user's device; no
+  emoji graphics are shipped.
+- **Test tools** (`test/`) use only the Python standard library and a locally
+  installed Google Chrome. In GitHub Actions, the tests additionally run with
+  [Playwright](https://github.com/microsoft/playwright) (Apache-2.0), installed
+  via npm on the runner. None of these are shipped with the app.
