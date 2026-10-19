@@ -31,12 +31,24 @@ export async function searchPlaces(query, { signal, near } = {}) {
 // Cache über Promises, damit identische Anfragen nicht doppelt laufen
 const cache = new Map();
 
+// FOSSGIS-Nutzungsbedingungen: höchstens eine Routing-Anfrage pro Sekunde
+const MIN_INTERVAL = 1000;
+let nextSlot = 0;
+
+function throttle() {
+    const now = Date.now();
+    const wait = Math.max(0, nextSlot - now);
+    nextSlot = Math.max(now, nextSlot) + MIN_INTERVAL;
+    return new Promise((resolve) => setTimeout(resolve, wait));
+}
+
 function fetchRoute(mode, a, b) {
     const key = `${mode}:${a.join(',')}:${b.join(',')}`;
     if (!cache.has(key)) {
         const coords = `${a[0]},${a[1]};${b[0]},${b[1]}`;
         const url = `${OSRM_URL}/${OSRM_PROFILES[mode]}/route/v1/driving/${coords}?overview=full&geometries=geojson`;
-        const p = fetch(url)
+        const p = throttle()
+            .then(() => fetch(url))
             .then((res) => res.json())
             .then((json) => {
                 if (json.code !== 'Ok' || !json.routes?.length) {
