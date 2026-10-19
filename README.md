@@ -122,6 +122,10 @@ NODE_PATH=.github/node_modules .github/node_modules/.bin/playwright test --confi
 - Train routes are drawn as straight lines – there is no free routing service
   for railways.
 - Markers overlap when stops are very close together.
+- Video export is not available with the OpenStreetMap raster style: the
+  [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/)
+  does not allow loading tiles nobody is viewing, which the video camera
+  movement would do. All other styles support video.
 - The public services (Photon, FOSSGIS, OSM tiles) are meant for moderate use;
   for heavy load, use your own instances or commercial providers.
 

@@ -29,6 +29,10 @@ test('App startet mit Karte und Einstellungen', async ({ page }) => {
     await expect(page.locator('#style option')).toHaveCount(7);
     await expect(page.locator('#empty-hint')).toBeVisible();
     await expect(page.locator('.stop')).toHaveCount(0);
+    // Pflichtangaben: Routing-Dienst und Fix-the-map-Link, nicht einklappbar
+    const attrib = page.locator('.maplibregl-ctrl-attrib');
+    await expect(attrib).toContainText('Routing: FOSSGIS OSRM');
+    await expect(attrib.locator('a[href="https://www.openstreetmap.org/fixthemap"]')).toBeVisible();
 });
 
 test('Beispielroute laden und berechnen', async ({ page }) => {
@@ -67,4 +71,22 @@ test('Zustand aus Link wiederherstellen', async ({ page }) => {
     // Screenshot zur Sichtprüfung als Testergebnis ablegen
     await page.waitForTimeout(3000);
     await page.screenshot({ path: test.info().outputPath('screenshot.png') });
+});
+
+test('Video-Export mit OSM-Rasterstil gesperrt', async ({ page }) => {
+    // Keine Kacheln vom OSM-Tile-Server laden: automatisierte Zugriffe verbietet die Tile Usage Policy
+    await page.route('https://tile.openstreetmap.org/**', (r) => r.abort());
+    await page.goto('/index.html');
+    await page.click('#demo');
+    await expect(page.locator('#vid-export')).toBeEnabled();
+    await expect(page.locator('#vid-style-hint')).toBeHidden();
+
+    await page.selectOption('#style', 'osm');
+    await expect(page.locator('#vid-export')).toBeDisabled();
+    await expect(page.locator('#vid-style-hint')).toBeVisible();
+    await expect(page.locator('#vid-style-hint')).toContainText('tile usage policy');
+    await expect(page.locator('.maplibregl-ctrl-attrib')).not.toHaveClass(/maplibregl-compact/);
+
+    await page.selectOption('#style', 'liberty');
+    await expect(page.locator('#vid-export')).toBeEnabled();
 });

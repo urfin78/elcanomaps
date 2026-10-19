@@ -7,6 +7,13 @@ const OSM = '© OpenStreetMap contributors';
 const OFM = `© OpenFreeMap © OpenMapTiles ${OSM}`;
 const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 const FONT = ['Noto Sans Bold'];
+const EOX = 'EOxCloudless – https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)';
+// Pflichtangaben der Dienste ohne eigene Kartenquelle (FOSSGIS-Nutzungsbedingungen, OSM Tile Usage Policy)
+const LINK = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+const SERVICE_ATTRIBUTION = [
+    LINK('https://routing.openstreetmap.de/about.html', 'Routing: FOSSGIS OSRM'),
+    LINK('https://www.openstreetmap.org/fixthemap', 'Fix the map'),
+];
 
 function rasterStyle(tiles, attribution, maxzoom) {
     return {
@@ -27,20 +34,23 @@ export const STYLES = {
         label: 'OpenStreetMap (Raster)',
         style: rasterStyle('https://tile.openstreetmap.org/{z}/{x}/{y}.png', OSM, 19),
         attribution: OSM,
+        // Tile Usage Policy: keine Kacheln laden, die niemand ansieht (Kamerafahrt im Video-Export)
+        noVideo: true,
     },
     satellite: {
         label: 'Satellit (Sentinel-2 2016)',
         style: rasterStyle(
             'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg',
-            'Sentinel-2 cloudless – s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)',
+            EOX,
             15,
         ),
-        attribution: 'Sentinel-2 cloudless – s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)',
+        attribution: EOX,
     },
 };
 
 const styleEntry = (id) => STYLES[id] || STYLES.liberty;
 export const attributionFor = (id) => styleEntry(id).attribution;
+export const videoAllowed = (id) => !styleEntry(id).noVideo;
 
 // --- Fahrzeug-Icons: Emoji in einem runden Badge ---
 
@@ -236,7 +246,7 @@ export function createMap(container, state) {
         style: styleEntry(state.style).style,
         center: [10, 50],
         zoom: 3.5,
-        attributionControl: { compact: true },
+        attributionControl: { compact: false, customAttribution: SERVICE_ATTRIBUTION },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map._elcano = { state, route: null };

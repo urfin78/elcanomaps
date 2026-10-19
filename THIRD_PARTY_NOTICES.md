@@ -21,17 +21,24 @@ of use apply.
 | [OpenFreeMap](https://openfreemap.org) (vector tiles, styles Liberty, Bright, Positron, Dark, Fiord) | Project MIT; tile schema and styles based on [OpenMapTiles](https://openmaptiles.org) (code BSD-3-Clause, design CC BY 4.0) | © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors |
 | Fonts (Noto Sans, via OpenFreeMap) | [SIL Open Font License 1.1](https://openfontlicense.org) | – |
 | OpenStreetMap raster tiles (`tile.openstreetmap.org`) | Data ODbL; [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) | © OpenStreetMap contributors |
-| [Sentinel-2 cloudless 2016](https://s2maps.eu) by EOX IT Services GmbH | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Sentinel-2 cloudless – s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
+| [EOxCloudless / Sentinel-2 cloudless 2016](https://cloudless.eox.at) by EOX IT Services GmbH | The 2016 layer was published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); current [EOX license terms](https://cloudless.eox.at/documentation/license): non-commercial use under CC BY-NC-SA 4.0, commercial use only with an EOX license | EOxCloudless – https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016) |
 
 The required attribution of the selected map style is burned into every
 exported image and video (bottom right).
+The live map additionally credits the routing service (“Routing: FOSSGIS
+OSRM”) and links to <https://www.openstreetmap.org/fixthemap>.
+
+Video export is disabled for the OpenStreetMap raster tiles: the
+[Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) does
+not allow loading tiles nobody is viewing, which the camera movement of a video
+export would do.
 
 ## Services
 
 | Service | Software license | Data | Terms of use |
 | :--- | :--- | :--- | :--- |
-| [Photon](https://photon.komoot.io) (place search, operated by komoot) | Apache-2.0 | OpenStreetMap (ODbL) | Fair use, no bulk requests |
-| [FOSSGIS OSRM](https://routing.openstreetmap.de) (routing for car/bike/foot) | OSRM: BSD-2-Clause | OpenStreetMap (ODbL) | [FOSSGIS terms of use](https://routing.openstreetmap.de/about.html) |
+| [Photon](https://photon.komoot.io) (place search, operated by komoot) | Apache-2.0 | OpenStreetMap (ODbL) | Fair use, extensive usage is throttled; search starts at 3 characters and is debounced |
+| [FOSSGIS OSRM](https://routing.openstreetmap.de) (routing for car/bike/foot) | OSRM: BSD-2-Clause | OpenStreetMap (ODbL) | [FOSSGIS terms of use](https://routing.openstreetmap.de/about.html): max. one request per second (enforced by the app), no heavy usage, attribution and a “fix the map” link |
 
 ## Other
 

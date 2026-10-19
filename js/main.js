@@ -5,10 +5,10 @@ import {
     addStop, removeStop, moveStop, setSegment,
     MODES, VEHICLES, IMAGE_PRESETS, VIDEO_PRESETS,
 } from './state.js';
-import { createMap, setMapStyle, syncMap, setAnimationFrame, STYLES } from './map.js';
+import { createMap, setMapStyle, syncMap, setAnimationFrame, videoAllowed, STYLES } from './map.js';
 import { searchPlaces, buildRoute } from './routing.js';
 import { buildTimeline, cameraPlan, cameraAt, frameAt } from './animation.js';
-import { renderImage, renderVideo, download } from './export.js';
+import { renderImage, renderVideo, download, OSM_VIDEO_HINT } from './export.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -233,6 +233,7 @@ $('demo').addEventListener('click', () => replace({ ...state, ...DEMO }));
 
 // --- Karte & Export-Einstellungen ---
 
+$('vid-style-hint').textContent = OSM_VIDEO_HINT;
 $('style').innerHTML = options(Object.entries(STYLES).map(([k, s]) => [k, s.label]), state.style);
 $('img-preset').innerHTML = options(Object.entries(IMAGE_PRESETS).map(([k, p]) => [k, p.label]), state.image.preset);
 $('vid-preset').innerHTML = options(Object.entries(VIDEO_PRESETS).map(([k, p]) => [k, p.label]), state.video.preset);
@@ -259,6 +260,10 @@ function renderControls() {
     setValue('vid-duration', state.video.duration);
     setValue('vid-fps', state.video.fps);
     setValue('vid-type', state.video.type);
+    // Laufenden Export weiter abbrechbar lassen
+    const noVideo = !videoAllowed(state.style);
+    $('vid-export').disabled = noVideo && !exportAbort;
+    $('vid-style-hint').hidden = !noVideo;
 }
 
 function bind(id, event, apply) {
@@ -388,6 +393,7 @@ $('vid-export').addEventListener('click', async () => {
         exportAbort = null;
         btn.textContent = 'Video exportieren';
         bar.hidden = true;
+        renderControls();
     }
 });
 

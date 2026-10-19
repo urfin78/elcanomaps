@@ -1,7 +1,11 @@
 // Bild- und Video-Export über eine Offscreen-Karte in Zielauflösung
 
-import { createOffscreenMap, waitIdle, attributionFor, setAnimationFrame } from './map.js';
+import { createOffscreenMap, waitIdle, attributionFor, setAnimationFrame, videoAllowed } from './map.js';
 import { buildTimeline, cameraPlan, cameraAt, frameAt } from './animation.js';
+
+export const OSM_VIDEO_HINT = 'Video export is not available with the OpenStreetMap (raster) style: '
+    + 'the OSM tile usage policy does not allow loading map tiles that nobody is viewing. '
+    + 'Please choose another map style, e.g. Liberty or Bright.';
 
 const MEDIABUNNY_URL = 'https://unpkg.com/mediabunny@1.61.6/dist/bundles/mediabunny.min.mjs';
 
@@ -88,6 +92,7 @@ export async function renderImage(state, route, { width, height, type }) {
 export async function renderVideo(state, route, opts, { onProgress, onFrame, signal } = {}) {
     const { width, height, fps, duration, camera, type } = opts;
     if (!route?.segments.length) throw new Error('Für ein Video werden mindestens zwei Stopps benötigt.');
+    if (!videoAllowed(state.style)) throw new Error(OSM_VIDEO_HINT);
     if (typeof VideoEncoder === 'undefined') {
         throw new Error('Dieser Browser unterstützt kein WebCodecs (VideoEncoder).');
     }
