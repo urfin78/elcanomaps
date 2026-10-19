@@ -1,4 +1,4 @@
-name: Smoke-Tests
+name: Smoke tests
 
 # Oberfläche: Start, Beispielroute, Bearbeiten, Zustand aus Link (Playwright mit Google Chrome)
 on:
@@ -38,7 +38,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Smoke-Tests"
+            echo "## Smoke tests"
             echo ""
             if [ -f playwright.log ]; then
               echo '```'

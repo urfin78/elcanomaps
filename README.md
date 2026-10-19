@@ -1,126 +1,129 @@
 # ElcanoMaps
 
-[![JS-Syntax](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml) [![Smoke-Tests](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml) [![Export-Selbsttest](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml)
+[![JS syntax](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml) [![Smoke tests](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml) [![Export self-test](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml)
 
-Reiserouten als Bild und animiertes Video – direkt im Browser, ohne Server,
-ohne Build-Schritt, mit freien Daten aus OpenStreetMap.
+Travel routes as images and animated videos – right in the browser, no server,
+no build step, using open data from OpenStreetMap.
 
-**Online ausprobieren:** <https://urfin78.github.io/elcanomaps/>
+**Try it online:** <https://urfin78.github.io/elcanomaps/>
 
-## Funktionen
+## Features
 
-- **Route zusammenstellen:** Orte suchen, als Stopps hinzufügen, per Drag & Drop
-  oder Pfeiltasten sortieren.
-- **Verkehrsmittel je Abschnitt:** Auto, Fahrrad und zu Fuß werden über Straßen
-  geroutet; Zug, Fähre und Flug als Luftlinie bzw. Großkreisbogen.
-- **Kartenstile:** Liberty, Bright, Positron, Dark, Fiord (OpenFreeMap),
-  OpenStreetMap-Raster, Satellit (Sentinel-2).
-- **Gestaltung:** Titel, Ortsnamen, eine Routenfarbe oder Farbe je Verkehrsmittel.
-- **Bild-Export:** PNG, JPEG oder WebP in Vorlagen (Quadrat, Story 9:16,
-  16:9, A4 mit 300 dpi) oder eigener Größe.
-- **Video-Export:** MP4 oder WebM; Animationsfahrzeug je Abschnitt, Kamera folgt
-  dem Fahrzeug oder zeigt die Gesamtansicht; Live-Vorschau.
-- **Speichern & Teilen:** Zustand im Link (URL-Hash) und im Browser gespeichert,
-  Export/Import als JSON, Export als GeoJSON.
+- **Build a route:** search for places, add them as stops, reorder them by
+  drag & drop or with the arrow buttons.
+- **Mode of transport per leg:** car, bike and walking are routed along roads;
+  train, ferry and flight are drawn as straight lines or great-circle arcs.
+- **Map styles:** Liberty, Bright, Positron, Dark, Fiord (OpenFreeMap),
+  OpenStreetMap raster, satellite (Sentinel-2).
+- **Styling:** title, place names, a single route colour or one colour per mode
+  of transport.
+- **Image export:** PNG, JPEG or WebP using presets (square, story 9:16, 16:9,
+  A4 at 300 dpi) or a custom size.
+- **Video export:** MP4 or WebM; animated vehicle per leg, camera follows the
+  vehicle or shows the whole route; live preview.
+- **Save & share:** state is stored in the link (URL hash) and in the browser;
+  import/export as JSON, export as GeoJSON.
 
-## Lokal starten
+The user interface is in German.
 
-Die App besteht nur aus statischen Dateien. ES-Module funktionieren nicht über
-`file://`, daher einen beliebigen lokalen Webserver verwenden, z. B.:
+## Running locally
+
+The app consists of static files only. ES modules don't work over `file://`,
+so use any local web server, for example:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Dann <http://localhost:8000> öffnen und mit „lade eine Beispielroute“ beginnen.
+Then open <http://localhost:8000> and start with „lade eine Beispielroute“
+(load a sample route).
 
-Für das Hosting genügt jeder statische Webspace.
+Any static web hosting is enough to host it.
 
-## Voraussetzungen
+## Requirements
 
-- Aktueller Browser mit WebGL. Für den Video-Export wird WebCodecs benötigt
-  (aktuelle Versionen von Chrome, Edge, Firefox und Safari).
-- Während des Video-Exports den Tab im Vordergrund lassen: Browser drosseln das
-  Rendering in Hintergrund-Tabs.
+- A current browser with WebGL. Video export needs WebCodecs (current versions
+  of Chrome, Edge, Firefox and Safari).
+- Keep the tab in the foreground while exporting a video: browsers throttle
+  rendering in background tabs.
 
-## Wie es funktioniert
+## How it works
 
-Ein zentrales Datenmodell (`js/state.js`) enthält Stopps, Abschnitte und
-Einstellungen. Daraus werden die Geometrien berechnet (`js/routing.js`), auf
-einer [MapLibre](https://maplibre.org)-Karte dargestellt (`js/map.js`) und
-exportiert (`js/export.js`).
+A central data model (`js/state.js`) holds stops, legs and settings. From it
+the geometries are computed (`js/routing.js`), drawn on a
+[MapLibre](https://maplibre.org) map (`js/map.js`) and exported
+(`js/export.js`).
 
-Für Exporte rendert eine unsichtbare zweite Karte in Zielauflösung. Beim Video
-wird jeder Frame deterministisch berechnet (`js/animation.js`): Zeitpunkt →
-Fahrzeugposition und Kamera → warten, bis alle Kacheln geladen sind → Bild an
-den Video-Encoder des Browsers. Dadurch ruckelt das Video nie, auch auf
-langsamen Geräten – der Export dauert dort nur länger.
+For exports, a hidden second map renders at the target resolution. For videos,
+every frame is computed deterministically (`js/animation.js`): point in time →
+vehicle position and camera → wait until all tiles are loaded → frame to the
+browser's video encoder. The video therefore never stutters, even on slow
+devices – the export just takes longer there.
 
-| Datei | Aufgabe |
+| File | Purpose |
 | :--- | :--- |
-| `index.html`, `css/style.css` | Layout und Oberfläche |
-| `js/state.js` | Datenmodell, Validierung, Speicherung |
-| `js/routing.js` | Ortssuche, Routing, Großkreis |
-| `js/geo.js` | Geometrie-Hilfsfunktionen |
-| `js/map.js` | Kartenstile, eigene Layer, Offscreen-Karte |
-| `js/animation.js` | Zeitleiste und Kameraführung |
-| `js/export.js` | Bild- und Video-Export |
-| `js/main.js` | UI-Verdrahtung |
+| `index.html`, `css/style.css` | Layout and user interface |
+| `js/state.js` | Data model, validation, persistence |
+| `js/routing.js` | Place search, routing, great circle |
+| `js/geo.js` | Geometry helpers |
+| `js/map.js` | Map styles, custom layers, offscreen map |
+| `js/animation.js` | Timeline and camera movement |
+| `js/export.js` | Image and video export |
+| `js/main.js` | UI wiring |
 
-## Externe Dienste und Datenschutz
+## External services and privacy
 
-Der Browser der Nutzer fragt direkt bei diesen Diensten an (dabei wird die
-IP-Adresse übertragen):
+The user's browser sends requests directly to these services (which transmits
+the IP address):
 
-- `unpkg.com` – JavaScript-Bibliotheken
-- `tiles.openfreemap.org` – Vektorkarten und Schriften
-- `tile.openstreetmap.org`, `tiles.maps.eox.at` – Rasterkarten (nur bei Auswahl)
-- `photon.komoot.io` – Ortssuche
-- `routing.openstreetmap.de` – Routing
+- `unpkg.com` – JavaScript libraries
+- `tiles.openfreemap.org` – vector tiles and fonts
+- `tile.openstreetmap.org`, `tiles.maps.eox.at` – raster tiles (only when
+  selected)
+- `photon.komoot.io` – place search
+- `routing.openstreetmap.de` – routing
 
-Es gibt kein eigenes Backend; Routen werden nur im Browser (`localStorage`) und
-im Link gespeichert.
+There is no backend; routes are stored only in the browser (`localStorage`)
+and in the link.
 
 ## Tests
 
-Ein Selbsttest prüft Routing, Bild- und Video-Export in Headless-Chrome
-(benötigt nur Python 3 und Google Chrome):
+A self-test checks routing, image and video export in headless Chrome (needs
+only Python 3 and Google Chrome):
 
 ```bash
-test/run-selftest.sh                     # Standard
+test/run-selftest.sh                     # default
 test/run-selftest.sh "style=dark&type=webm&camera=overview"
-test/screenshot.sh test/demo-state.json  # Screenshot der Oberfläche
+test/screenshot.sh test/demo-state.json  # screenshot of the UI
 ```
 
-Ergebnisse landen in `.test/` (wird nicht versioniert).
+Results end up in `.test/` (not versioned).
 
-Bei jedem Push auf `main` und bei Pull Requests laufen in GitHub Actions:
+On every push to `main` and on pull requests, GitHub Actions runs:
 
-- **JS-Syntax** – `node --check` für alle Skripte,
-- **Smoke-Tests** – Oberfläche mit Playwright (`test/smoke.spec.js`): Start,
-  Beispielroute, Stopps bearbeiten, Zustand aus Link,
-- **Export-Selbsttest** – `test/selftest.html` mit Playwright
-  (`test/export.spec.js`) als MP4 und WebM; die exportierten Dateien hängen als
-  Artefakt am Workflow-Lauf.
+- **JS syntax** – `node --check` for all scripts,
+- **Smoke tests** – the UI with Playwright (`test/smoke.spec.js`): startup,
+  sample route, editing stops, state from link,
+- **Export self-test** – `test/selftest.html` with Playwright
+  (`test/export.spec.js`) as MP4 and WebM; the exported files are attached to
+  the workflow run as an artifact.
 
-Lokal lassen sich die Playwright-Tests so starten (Node.js und Google Chrome
-nötig):
+To run the Playwright tests locally (needs Node.js and Google Chrome):
 
 ```bash
 npm install --prefix .github
 NODE_PATH=.github/node_modules .github/node_modules/.bin/playwright test --config test/playwright.config.js
 ```
 
-## Bekannte Einschränkungen
+## Known limitations
 
-- Zugstrecken werden als Luftlinie gezeichnet – es gibt keinen freien
-  Routing-Dienst für Bahnstrecken.
-- Bei sehr nah beieinanderliegenden Stopps überlappen sich die Markierungen.
-- Die öffentlichen Dienste (Photon, FOSSGIS, OSM-Kacheln) sind für moderate
-  Nutzung gedacht; für hohe Last eigene Instanzen oder kommerzielle Anbieter
-  verwenden.
+- Train routes are drawn as straight lines – there is no free routing service
+  for railways.
+- Markers overlap when stops are very close together.
+- The public services (Photon, FOSSGIS, OSM tiles) are meant for moderate use;
+  for heavy load, use your own instances or commercial providers.
 
-## Lizenz
+## License
 
-Eigener Code: [MIT](LICENSE). Bibliotheken, Kartendaten und Dienste Dritter mit
-ihren Lizenzen: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Own code: [MIT](LICENSE). Third-party libraries, map data and services with
+their licenses: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

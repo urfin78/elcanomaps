@@ -1,4 +1,4 @@
-name: JS-Syntax
+name: JS syntax
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - name: Module und Testskripte mit node --check prüfen
         run: |
           fail=0
-          echo "## JS-Syntax" > "$GITHUB_STEP_SUMMARY"
+          echo "## JS syntax" > "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           mkdir -p .ci-tmp
           # App-Dateien sind ES-Module: als .mjs prüfen; Testskripte sind CommonJS

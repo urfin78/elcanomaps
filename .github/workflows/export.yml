@@ -1,4 +1,4 @@
-name: Export-Selbsttest
+name: Export self-test
 
 # Routing, Bild- und Video-Export über test/selftest.html (Playwright mit Google Chrome)
 on:
@@ -38,7 +38,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Export-Selbsttest"
+            echo "## Export self-test"
             echo ""
             if [ -f playwright.log ]; then
               echo '```'
