@@ -1,0 +1,48 @@
+name: JS-Syntax
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Module und Testskripte mit node --check prüfen
+        run: |
+          fail=0
+          echo "## JS-Syntax" > "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p .ci-tmp
+          # App-Dateien sind ES-Module: als .mjs prüfen; Testskripte sind CommonJS
+          for f in js/*.js test/*.js; do
+            case "$f" in
+              js/*) check=".ci-tmp/$(basename "$f" .js).mjs"; cp "$f" "$check" ;;
+              *) check="$f" ;;
+            esac
+            if out=$(node --check "$check" 2>&1); then
+              echo "OK $f"
+              echo "- :white_check_mark: \`$f\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error file=$f::$out"
+              {
+                echo "- :x: \`$f\`"
+                echo ""
+                echo '  ```'
+                echo "$out" | sed 's/^/  /'
+                echo '  ```'
+              } >> "$GITHUB_STEP_SUMMARY"
+              fail=1
+            fi
+          done
+          exit $fail

@@ -1,0 +1,60 @@
+name: Smoke-Tests
+
+# Oberfläche: Start, Beispielroute, Bearbeiten, Zustand aus Link (Playwright mit Google Chrome)
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: CI-Tooling installieren
+        working-directory: .github
+        run: npm install --no-audit --no-fund
+
+      # Google Chrome ist auf ubuntu-latest vorinstalliert (channel: 'chrome' in der Konfiguration)
+      - name: Tests ausführen
+        env:
+          CI: '1'
+          NODE_PATH: ${{ github.workspace }}/.github/node_modules
+        run: |
+          export PATH="${GITHUB_WORKSPACE}/.github/node_modules/.bin:${PATH}"
+          set -o pipefail
+          playwright test --config test/playwright.config.js smoke.spec 2>&1 | tee playwright.log
+
+      - name: Zusammenfassung schreiben
+        if: always()
+        run: |
+          {
+            echo "## Smoke-Tests"
+            echo ""
+            if [ -f playwright.log ]; then
+              echo '```'
+              tail -n 40 playwright.log
+              echo '```'
+            else
+              echo "_Kein playwright.log erzeugt._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ergebnisse hochladen
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: smoke-ergebnisse
+          path: |
+            test-results
+            playwright-report
+          retention-days: 7

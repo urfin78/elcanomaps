@@ -1,5 +1,7 @@
 # ElcanoMaps
 
+[![JS-Syntax](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/js-syntax.yml) [![Smoke-Tests](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/smoke.yml) [![Export-Selbsttest](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml/badge.svg?branch=main)](https://github.com/urfin78/elcanomaps/actions/workflows/export.yml)
+
 Reiserouten als Bild und animiertes Video – direkt im Browser, ohne Server,
 ohne Build-Schritt, mit freien Daten aus OpenStreetMap.
 
@@ -91,6 +93,23 @@ test/screenshot.sh test/demo-state.json  # Screenshot der Oberfläche
 ```
 
 Ergebnisse landen in `.test/` (wird nicht versioniert).
+
+Bei jedem Push auf `main` und bei Pull Requests laufen in GitHub Actions:
+
+- **JS-Syntax** – `node --check` für alle Skripte,
+- **Smoke-Tests** – Oberfläche mit Playwright (`test/smoke.spec.js`): Start,
+  Beispielroute, Stopps bearbeiten, Zustand aus Link,
+- **Export-Selbsttest** – `test/selftest.html` mit Playwright
+  (`test/export.spec.js`) als MP4 und WebM; die exportierten Dateien hängen als
+  Artefakt am Workflow-Lauf.
+
+Lokal lassen sich die Playwright-Tests so starten (Node.js und Google Chrome
+nötig):
+
+```bash
+npm install --prefix .github
+NODE_PATH=.github/node_modules .github/node_modules/.bin/playwright test --config test/playwright.config.js
+```
 
 ## Bekannte Einschränkungen
 

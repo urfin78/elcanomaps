@@ -14,3 +14,9 @@ PROJECT_PLAN.md
 
 # Python
 __pycache__/
+
+# CI-Tooling (nur auf GitHub-Actions-Runnern benötigt)
+node_modules/
+package-lock.json
+test-results/
+playwright-report/
