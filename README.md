@@ -34,24 +34,6 @@ Dann <http://localhost:8000> öffnen und mit „lade eine Beispielroute“ begin
 
 Für das Hosting genügt jeder statische Webspace.
 
-## Veröffentlichen
-
-Die App wird über GitHub Pages vom Branch `gh-pages` unter
-<https://urfin78.github.io/elcanomaps/> ausgeliefert. Der Workflow
-„Auto Release“ (`.github/workflows/auto-release.yml`) wird manuell unter
-*Actions* gestartet und
-
-1. leitet aus den Commit-Nachrichten seit dem letzten Tag die neue Version ab
-   (Conventional Commits: `feat:` → Minor, `!:`/`BREAKING CHANGE` → Major,
-   sonst Patch),
-2. legt ein GitHub-Release mit Tag und Release Notes an,
-3. kopiert `index.html`, `css/`, `js/`, `LICENSE` und `THIRD_PARTY_NOTICES.md`
-   auf den Branch `gh-pages`; GitHub Pages veröffentlicht den neuen Stand
-   danach automatisch.
-
-Ohne neue Commits seit dem letzten Tag passiert nichts. Änderungen sind also
-erst nach dem nächsten Release-Lauf online, nicht schon beim Push auf `main`.
-
 ## Voraussetzungen
 
 - Aktueller Browser mit WebGL. Für den Video-Export wird WebCodecs benötigt
