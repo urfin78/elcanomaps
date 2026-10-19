@@ -3,6 +3,8 @@
 Reiserouten als Bild und animiertes Video – direkt im Browser, ohne Server,
 ohne Build-Schritt, mit freien Daten aus OpenStreetMap.
 
+**Online ausprobieren:** <https://urfin78.github.io/elcanomaps/>
+
 ## Funktionen
 
 - **Route zusammenstellen:** Orte suchen, als Stopps hinzufügen, per Drag & Drop
@@ -19,7 +21,7 @@ ohne Build-Schritt, mit freien Daten aus OpenStreetMap.
 - **Speichern & Teilen:** Zustand im Link (URL-Hash) und im Browser gespeichert,
   Export/Import als JSON, Export als GeoJSON.
 
-## Starten
+## Lokal starten
 
 Die App besteht nur aus statischen Dateien. ES-Module funktionieren nicht über
 `file://`, daher einen beliebigen lokalen Webserver verwenden, z. B.:
@@ -30,11 +32,12 @@ python3 -m http.server 8000
 
 Dann <http://localhost:8000> öffnen und mit „lade eine Beispielroute“ beginnen.
 
-Für das Hosting genügt jeder statische Webspace (z. B. GitHub Pages).
+Für das Hosting genügt jeder statische Webspace.
 
 ## Veröffentlichen
 
-Die App wird über GitHub Pages vom Branch `gh-pages` ausgeliefert. Der Workflow
+Die App wird über GitHub Pages vom Branch `gh-pages` unter
+<https://urfin78.github.io/elcanomaps/> ausgeliefert. Der Workflow
 „Auto Release“ (`.github/workflows/auto-release.yml`) wird manuell unter
 *Actions* gestartet und
 
@@ -43,10 +46,11 @@ Die App wird über GitHub Pages vom Branch `gh-pages` ausgeliefert. Der Workflow
    sonst Patch),
 2. legt ein GitHub-Release mit Tag und Release Notes an,
 3. kopiert `index.html`, `css/`, `js/`, `LICENSE` und `THIRD_PARTY_NOTICES.md`
-   auf den Branch `gh-pages`.
+   auf den Branch `gh-pages`; GitHub Pages veröffentlicht den neuen Stand
+   danach automatisch.
 
-Einmalig in den Repository-Einstellungen unter *Pages* als Quelle
-„Deploy from a branch“ mit `gh-pages` / `(root)` wählen.
+Ohne neue Commits seit dem letzten Tag passiert nichts. Änderungen sind also
+erst nach dem nächsten Release-Lauf online, nicht schon beim Push auf `main`.
 
 ## Voraussetzungen
 
