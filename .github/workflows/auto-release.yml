@@ -1,0 +1,105 @@
+name: Auto Release
+
+# Manuell auslösen: Version aus Conventional Commits seit dem letzten Tag ableiten,
+# GitHub-Release anlegen und die statischen App-Dateien auf den Branch gh-pages veröffentlichen.
+on:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Letzten Tag ermitteln
+        id: latest_tag
+        run: |
+          latest=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "tag=${latest:-v0.0.0}" >> $GITHUB_OUTPUT
+
+      - name: Versionssprung aus Commits bestimmen
+        id: bump
+        run: |
+          latest="${{ steps.latest_tag.outputs.tag }}"
+          if git rev-parse "$latest" >/dev/null 2>&1; then
+            commits=$(git log "$latest"..HEAD --pretty=format:"%s")
+          else
+            commits=$(git log --pretty=format:"%s")
+          fi
+          if [ -z "$commits" ]; then
+            echo "bump=none" >> $GITHUB_OUTPUT
+          elif echo "$commits" | grep -qE "^.+!:|BREAKING CHANGE"; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+          elif echo "$commits" | grep -qE "^feat(\(.+\))?:"; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Neue Version berechnen
+        id: version
+        if: steps.bump.outputs.bump != 'none'
+        run: |
+          version="${{ steps.latest_tag.outputs.tag }}"
+          version="${version#v}"
+          version="${version%%-*}"
+          IFS='.' read -r major minor patch <<< "$version"
+          major=${major:-0}; minor=${minor:-0}; patch=${patch:-0}
+          case "${{ steps.bump.outputs.bump }}" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            patch) patch=$((patch+1)) ;;
+          esac
+          echo "tag=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+
+      - name: Release Notes erzeugen
+        if: steps.bump.outputs.bump != 'none'
+        run: |
+          latest="${{ steps.latest_tag.outputs.tag }}"
+          if git rev-parse "$latest" >/dev/null 2>&1; then
+            git log "$latest"..HEAD --pretty=format:"- %s" \
+              | grep -v "^- Merge" > release_notes.txt
+          else
+            git log --pretty=format:"- %s" \
+              | grep -v "^- Merge" > release_notes.txt
+          fi
+
+      - name: GitHub-Release anlegen
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file release_notes.txt
+
+      - name: Auf GitHub Pages veröffentlichen
+        if: steps.bump.outputs.bump != 'none'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Nur die Dateien der App ausliefern (keine Tests, keine Workflows)
+          deploy=$(mktemp -d)
+          cp -r index.html css js LICENSE THIRD_PARTY_NOTICES.md "$deploy/"
+          # Ohne .nojekyll verarbeitet GitHub Pages die Dateien mit Jekyll
+          touch "$deploy/.nojekyll"
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+          fi
+          # Alten Stand vollständig ersetzen, damit gelöschte Dateien nicht liegen bleiben
+          git rm -rfq --ignore-unmatch .
+          git clean -fdxq
+          cp -r "$deploy/." .
+          git add -A
+          git diff --staged --quiet || git commit -m "deploy: ${{ steps.version.outputs.tag }}"
+          git push origin gh-pages

@@ -32,6 +32,22 @@ Dann <http://localhost:8000> öffnen und mit „lade eine Beispielroute“ begin
 
 Für das Hosting genügt jeder statische Webspace (z. B. GitHub Pages).
 
+## Veröffentlichen
+
+Die App wird über GitHub Pages vom Branch `gh-pages` ausgeliefert. Der Workflow
+„Auto Release“ (`.github/workflows/auto-release.yml`) wird manuell unter
+*Actions* gestartet und
+
+1. leitet aus den Commit-Nachrichten seit dem letzten Tag die neue Version ab
+   (Conventional Commits: `feat:` → Minor, `!:`/`BREAKING CHANGE` → Major,
+   sonst Patch),
+2. legt ein GitHub-Release mit Tag und Release Notes an,
+3. kopiert `index.html`, `css/`, `js/`, `LICENSE` und `THIRD_PARTY_NOTICES.md`
+   auf den Branch `gh-pages`.
+
+Einmalig in den Repository-Einstellungen unter *Pages* als Quelle
+„Deploy from a branch“ mit `gh-pages` / `(root)` wählen.
+
 ## Voraussetzungen
 
 - Aktueller Browser mit WebGL. Für den Video-Export wird WebCodecs benötigt
