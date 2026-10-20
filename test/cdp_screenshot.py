@@ -1,12 +1,12 @@
-"""Screenshot einer laufenden Headless-Chrome-Seite über das DevTools-Protokoll.
+"""Screenshot of a running headless Chrome page via the DevTools protocol.
 
-Anders als `--screenshot` (virtuelle Zeit) wird in Echtzeit gewartet, damit
-Timer, Netzwerk und WebGL-Rendering wie bei echten Nutzern ablaufen.
-Nur Python-Standardbibliothek.
+Unlike `--screenshot` (virtual time) this waits in real time, so timers,
+network and WebGL rendering behave as for real users.
+Python standard library only.
 
-Aufruf: python3 cdp_screenshot.py <devtools-port> <wartezeit-s> <ausgabe.png> [js]
-  js: optionales Skript, das nach der Wartezeit ausgeführt wird; danach weitere
-      Wartezeit von 5 s vor dem Screenshot (z. B. für einen Sprachwechsel)
+Usage: python3 cdp_screenshot.py <devtools-port> <wait-s> <output.png> [js]
+  js: optional script that runs after the wait; followed by another
+      5 s wait before the screenshot (e.g. for a language change)
 """
 
 import base64
@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 
 
 def page_ws_url(port):
-    # DevTools-Endpunkt ist lokal; Proxy-Variablen der Umgebung nicht verwenden
+    # The DevTools endpoint is local; don't use the environment's proxy variables
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     for _ in range(100):
         try:
@@ -32,7 +32,7 @@ def page_ws_url(port):
         except OSError:
             pass
         time.sleep(0.2)
-    raise RuntimeError("Keine DevTools-Seite gefunden")
+    raise RuntimeError("No DevTools page found")
 
 
 def connect(url):
@@ -72,7 +72,7 @@ def recv_exact(sock, n):
     while len(buf) < n:
         chunk = sock.recv(n - len(buf))
         if not chunk:
-            raise RuntimeError("Verbindung geschlossen")
+            raise RuntimeError("Connection closed")
         buf += chunk
     return buf
 

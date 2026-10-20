@@ -1,9 +1,9 @@
-"""Lokaler Weiterleitungs-Proxy für Headless-Tests.
+"""Local forwarding proxy for headless tests.
 
-Chrome kann keine Zugangsdaten für einen Upstream-Proxy per Kommandozeile übernehmen.
-Dieser Proxy nimmt Verbindungen auf 127.0.0.1:<port> an, ergänzt den
-Proxy-Authorization-Header aus $HTTPS_PROXY und leitet an den Upstream-Proxy weiter.
-Nur Python-Standardbibliothek.
+Chrome can't take credentials for an upstream proxy from the command line.
+This proxy accepts connections on 127.0.0.1:<port>, adds the
+Proxy-Authorization header from $HTTPS_PROXY and forwards to the upstream proxy.
+Python standard library only.
 """
 
 import base64

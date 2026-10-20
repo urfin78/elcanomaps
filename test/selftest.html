@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ElcanoMaps Selbsttest</title>
+    <title>ElcanoMaps self-test</title>
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
     <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 </head>
 <body>
     <!--
-        Durchläuft Routing, Bild- und Video-Export ohne UI.
-        Parameter: ?style=<id>&camera=follow|overview&type=mp4|webm
-        Ergebnis steht in #out und wird an den Testserver (test/server.py) hochgeladen.
+        Runs routing, image and video export without the UI.
+        Parameters: ?style=<id>&camera=follow|overview&type=mp4|webm
+        The result is written to #out and uploaded to the test server (test/server.py).
     -->
     <pre id="out">running</pre>
     <script type="module">
@@ -25,7 +25,7 @@
             document.getElementById('out').textContent = JSON.stringify(out);
         };
         const upload = (name, body) => fetch(`/upload/${name}`, { method: 'POST', body }).catch(() => {});
-        // Konsolenfehler mitprotokollieren
+        // Record console errors
         const consoleErrors = [];
         const origError = console.error;
         console.error = (...args) => {
@@ -43,7 +43,7 @@
                     { name: 'Lissabon', lng: -9.1393, lat: 38.7223 },
                 ],
                 segments: [{ mode: 'train' }, { mode: 'car' }, { mode: 'flight' }],
-                title: 'Selbsttest',
+                title: 'Self-test',
                 style: params.get('style') || 'liberty',
             });
 
@@ -72,7 +72,7 @@
                 type: params.get('type') || 'mp4',
             }, {
                 onProgress: () => frames++,
-                // Einzelbilder zur Sichtprüfung hochladen
+                // Upload single frames for visual inspection
                 onFrame: async (canvas, i, total) => {
                     if (![0, Math.floor(total / 3), Math.floor(total * 2 / 3), total - 1].includes(i)) return;
                     const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));

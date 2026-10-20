@@ -1,5 +1,5 @@
-// Zentrales Datenmodell: einzige Quelle der Wahrheit für Karte, Animation und Export
-// Beschriftungen kommen aus js/i18n.js (mode.<id>, vehicle.<id>, format.<id>)
+// Central data model: single source of truth for map, animation and export
+// Labels come from js/i18n.js (mode.<id>, vehicle.<id>, format.<id>)
 
 export const MODES = {
     car: { routed: true, color: '#d62828', vehicle: 'car' },
@@ -10,7 +10,7 @@ export const MODES = {
     flight: { routed: false, color: '#f18f01', vehicle: 'plane', dashed: true },
 };
 
-// rotate: Icon dreht sich mit der Fahrtrichtung, offset gleicht die Grundausrichtung des Emojis aus
+// rotate: icon turns with the direction of travel; offset compensates for the emoji's base orientation
 export const VEHICLES = {
     car: { emoji: '🚗' },
     camper: { emoji: '🚐' },
@@ -58,7 +58,7 @@ export function defaults() {
 
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 
-// Unbekannte Eingaben (URL, Datei, localStorage) auf ein gültiges Modell zurückführen
+// Turn untrusted input (URL, file, localStorage) into a valid model
 export function sanitize(raw) {
     const base = defaults();
     if (!raw || typeof raw !== 'object') return base;
@@ -86,7 +86,7 @@ export function vehicleOf(segment) {
     return segment.vehicle || MODES[segment.mode].vehicle;
 }
 
-// --- Serialisierung (base64url, unicode-sicher) ---
+// --- Serialization (base64url, unicode-safe) ---
 
 function encode(obj) {
     const bytes = new TextEncoder().encode(JSON.stringify(obj));
@@ -111,14 +111,14 @@ function loadInitial() {
         try {
             return sanitize(decode(m[1]));
         } catch (e) {
-            console.warn('Ungültiger Link-Zustand', e);
+            console.warn('Invalid state in link', e);
         }
     }
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) return sanitize(JSON.parse(stored));
     } catch (e) {
-        console.warn('localStorage nicht verfügbar', e);
+        console.warn('localStorage not available', e);
     }
     return defaults();
 }
@@ -132,7 +132,7 @@ function persist() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-        // privater Modus o. ä.: Zustand bleibt nur im Speicher
+        // private mode or similar: state is kept in memory only
     }
     history.replaceState(null, '', `#r=${encode(state)}`);
 }
@@ -155,7 +155,7 @@ export function subscribe(fn) {
     return () => listeners.delete(fn);
 }
 
-// --- Operationen auf Stopps und Abschnitten ---
+// --- Operations on stops and legs ---
 
 export function addStop(stop) {
     update((s) => {

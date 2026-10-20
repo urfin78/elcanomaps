@@ -1,21 +1,21 @@
-# Lokale Testartefakte (Chrome-Profil, Screenshots, Exporte)
+# Local test artifacts (Chrome profile, screenshots, exports)
 .test/
 
 # Editor/IDE
 .idea/
 .vscode/
 
-# Lokale Claude-Code-Einstellungen und -Anweisungen
+# Local Claude Code settings and instructions
 .claude/
 CLAUDE.md
 
-# Interne Planung
+# Internal planning
 PROJECT_PLAN.md
 
 # Python
 __pycache__/
 
-# CI-Tooling (nur auf GitHub-Actions-Runnern benötigt)
+# CI tooling (only needed on GitHub Actions runners)
 node_modules/
 package-lock.json
 test-results/

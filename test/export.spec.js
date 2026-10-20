@@ -1,5 +1,5 @@
-// Export-Selbsttest: führt test/selftest.html (Routing, Bild- und Video-Export) aus
-// und prüft das Ergebnis. Exportierte Dateien landen je Variante in test-results/.
+// Export self-test: runs test/selftest.html (routing, image and video export)
+// and checks the result. Exported files end up in test-results/ per variant.
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
@@ -19,22 +19,22 @@ for (const v of VARIANTS) {
         }
 
         await page.goto(`/test/selftest.html?${v.query}`);
-        // Der Selbsttest schreibt consoleErrors als letzten Eintrag
+        // The self-test writes consoleErrors as its last entry
         await page.waitForFunction(() => document.getElementById('out').textContent.includes('"consoleErrors"'),
             null, { timeout: 4 * 60 * 1000, polling: 1000 });
         const result = JSON.parse(await page.locator('#out').textContent());
 
-        // Ergebnisse und Exporte für das Workflow-Artefakt sichern
+        // Keep results and exports for the workflow artifact
         fs.writeFileSync(test.info().outputPath('result.json'), JSON.stringify(result, null, 2));
         for (const f of fs.existsSync(OUT) ? fs.readdirSync(OUT) : []) {
             if (f.startsWith('export.')) fs.copyFileSync(path.join(OUT, f), test.info().outputPath(f));
         }
 
-        // Ausfälle externer Dienste (Routing) führen zu Luftlinie statt Fehler: nur vermerken
+        // Outages of external services (routing) lead to straight lines instead of errors: only note them
         for (const e of result.route?.errors || []) test.info().annotations.push({ type: 'Routing', description: e });
-        for (const e of result.consoleErrors || []) test.info().annotations.push({ type: 'Konsole', description: e });
+        for (const e of result.consoleErrors || []) test.info().annotations.push({ type: 'Console', description: e });
 
-        expect(result.error, 'Fehler im Selbsttest').toBeUndefined();
+        expect(result.error, 'Error in self-test').toBeUndefined();
         expect(result.route.segments.map((s) => s.mode)).toEqual(['train', 'car', 'flight']);
         expect(result.route.km).toBeGreaterThan(2000);
         expect(result.image.type).toBe('image/png');

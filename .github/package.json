@@ -1,7 +1,7 @@
 {
   "name": "elcanomaps-ci",
   "private": true,
-  "description": "Nur für CI. Die App selbst kommt ohne Build-Schritt und Paketmanager aus; diese Datei installiert lediglich das Test-Tooling für GitHub Actions.",
+  "description": "CI only. The app itself needs no build step and no package manager; this file only installs the test tooling for GitHub Actions.",
   "scripts": {
     "test": "playwright test --config ../test/playwright.config.js"
   },

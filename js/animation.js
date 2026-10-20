@@ -1,4 +1,4 @@
-// Zeitleiste und Kameraführung der Routenanimation (deterministisch: Zeit -> Bild)
+// Timeline and camera movement of the route animation (deterministic: time -> frame)
 
 import { pointAlong, easeInOut, clamp, lerp } from './geo.js';
 
@@ -6,7 +6,7 @@ const FOLLOW_MAX_ZOOM = 12;
 const OVERVIEW_MAX_ZOOM = 11;
 
 export function buildTimeline(route, duration) {
-    // Lange Abschnitte dauern länger, aber gedämpft (sonst dominieren Flüge)
+    // Long legs take longer, but damped (otherwise flights dominate)
     const weights = route.segments.map((s) => Math.sqrt(Math.max(s.length, 0.01)));
     const total = weights.reduce((a, b) => a + b, 0) || 1;
     const intro = Math.min(1.5, duration * 0.12);
@@ -37,7 +37,7 @@ function toCamera(c) {
     return { center: [c.center.lng, c.center.lat], zoom: c.zoom };
 }
 
-// Kameraparameter hängen von der Kartengröße ab, daher pro Karte berechnen
+// Camera parameters depend on the map size, so compute them per map
 export function cameraPlan(map, tl, mode, topPadding = 0) {
     const { width, height } = map.getContainer().getBoundingClientRect();
     const pad = Math.round(Math.min(width, height) * 0.1);

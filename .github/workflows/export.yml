@@ -1,6 +1,6 @@
 name: Export self-test
 
-# Routing, Bild- und Video-Export über test/selftest.html (Playwright mit Google Chrome)
+# Routing, image and video export via test/selftest.html (Playwright with Google Chrome)
 on:
   push:
     branches: [main]
@@ -20,12 +20,12 @@ jobs:
         with:
           node-version: '24'
 
-      - name: CI-Tooling installieren
+      - name: Install CI tooling
         working-directory: .github
         run: npm install --no-audit --no-fund
 
-      # Google Chrome ist auf ubuntu-latest vorinstalliert (channel: 'chrome' in der Konfiguration)
-      - name: Tests ausführen
+      # Google Chrome is preinstalled on ubuntu-latest (channel: 'chrome' in the configuration)
+      - name: Run tests
         env:
           CI: '1'
           NODE_PATH: ${{ github.workspace }}/.github/node_modules
@@ -34,7 +34,7 @@ jobs:
           set -o pipefail
           playwright test --config test/playwright.config.js export.spec 2>&1 | tee playwright.log
 
-      - name: Zusammenfassung schreiben
+      - name: Write summary
         if: always()
         run: |
           {
@@ -45,15 +45,15 @@ jobs:
               tail -n 40 playwright.log
               echo '```'
             else
-              echo "_Kein playwright.log erzeugt._"
+              echo "_No playwright.log produced._"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Ergebnisse hochladen
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: export-ergebnisse
+          name: export-results
           path: |
             test-results
             playwright-report

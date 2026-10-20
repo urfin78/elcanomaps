@@ -1,6 +1,6 @@
-// Playwright-Konfiguration für Smoke- und Export-Tests (läuft in GitHub Actions).
-// Liefert das Projekt über test/server.py aus, damit der Upload-Endpunkt des
-// Selbsttests (POST /upload/<name> → .test/) wie bei test/run-selftest.sh funktioniert.
+// Playwright configuration for smoke and export tests (runs in GitHub Actions).
+// Serves the project via test/server.py so the self-test's upload endpoint
+// (POST /upload/<name> → .test/) works as with test/run-selftest.sh.
 const { defineConfig } = require('@playwright/test');
 const path = require('path');
 
@@ -17,15 +17,15 @@ module.exports = defineConfig({
     reporter: [['list'], ['html', { open: 'never', outputFolder: path.join(ROOT, 'playwright-report') }]],
     use: {
         baseURL: `http://127.0.0.1:${PORT}`,
-        // Installiertes Google Chrome statt Playwright-Chromium: enthält H.264 für den MP4-Export
+        // Installed Google Chrome instead of Playwright's Chromium: includes H.264 for MP4 export
         channel: 'chrome',
         viewport: { width: 1400, height: 900 },
-        // Oberfläche folgt der Browsersprache; Tests prüfen standardmäßig die deutschen Texte
+        // The UI follows the browser language; tests check the German texts by default
         locale: 'de-DE',
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         launchOptions: {
-            // WebGL ohne GPU (wie in test/env.sh)
+            // WebGL without GPU (as in test/env.sh)
             args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
         },
     },

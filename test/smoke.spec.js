@@ -1,10 +1,10 @@
-// Smoke-Tests der Oberfläche (index.html): Start, Beispielroute, Bearbeiten, Zustand aus Link.
-// Benötigt Netzwerkzugriff auf die externen Dienste (Kacheln, Routing).
+// Smoke tests of the UI (index.html): startup, sample route, editing, state from link, languages.
+// Needs network access to the external services (tiles, routing).
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 
-// Zustand wie die App als base64url in den URL-Hash kodieren (vgl. test/screenshot.sh)
+// Encode the state as base64url in the URL hash like the app does (see test/screenshot.sh)
 function stateHash(file) {
     const json = JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8')));
     return '#r=' + Buffer.from(json, 'utf8').toString('base64url');
@@ -12,7 +12,7 @@ function stateHash(file) {
 
 const ROUTE_STATUS = /\d+ Abschnitte? · [\d.]+ km/;
 
-// Nicht abgefangene Fehler im Seitenskript lassen jeden Test scheitern
+// Uncaught errors in the page script fail every test
 let pageErrors = [];
 test.beforeEach(async ({ page }) => {
     pageErrors = [];
@@ -20,22 +20,22 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async () => {
-    expect(pageErrors, 'Fehler im Seitenskript').toEqual([]);
+    expect(pageErrors, 'Errors in page script').toEqual([]);
 });
 
-test('App startet mit Karte und Einstellungen', async ({ page }) => {
+test('App starts with map and settings', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('#map canvas.maplibregl-canvas')).toBeVisible();
     await expect(page.locator('#style option')).toHaveCount(7);
     await expect(page.locator('#empty-hint')).toBeVisible();
     await expect(page.locator('.stop')).toHaveCount(0);
-    // Pflichtangaben: Routing-Dienst und Fix-the-map-Link, nicht einklappbar
+    // Required attribution: routing service and fix-the-map link, not collapsible
     const attrib = page.locator('.maplibregl-ctrl-attrib');
     await expect(attrib).toContainText('Routing: FOSSGIS OSRM');
     await expect(attrib.locator('a[href="https://www.openstreetmap.org/fixthemap"]')).toBeVisible();
 });
 
-test('Beispielroute laden und berechnen', async ({ page }) => {
+test('Load and compute sample route', async ({ page }) => {
     await page.goto('/index.html');
     await page.click('#demo');
     await expect(page.locator('.stop')).toHaveCount(6);
@@ -45,7 +45,7 @@ test('Beispielroute laden und berechnen', async ({ page }) => {
     expect(page.url()).toMatch(/#r=/);
 });
 
-test('Stopps sortieren und entfernen', async ({ page }) => {
+test('Reorder and remove stops', async ({ page }) => {
     await page.goto('/index.html');
     await page.click('#demo');
     const names = page.locator('.stop .name');
@@ -61,24 +61,24 @@ test('Stopps sortieren und entfernen', async ({ page }) => {
     await expect(names.first()).toHaveText('Hamburg');
 });
 
-test('Zustand aus Link wiederherstellen', async ({ page }) => {
+test('Restore state from link', async ({ page }) => {
     await page.goto('/index.html' + stateHash('demo-state.json'));
     await expect(page.locator('.stop')).toHaveCount(6);
     await expect(page.locator('#title')).toHaveValue('Europa-Reise 2026');
     await expect(page.locator('#color-by-mode')).toBeChecked();
     await expect(page.locator('#route-status')).toHaveText(ROUTE_STATUS, { timeout: 60 * 1000 });
 
-    // Screenshot zur Sichtprüfung als Testergebnis ablegen
+    // Store a screenshot as test result for visual inspection
     await page.waitForTimeout(3000);
     await page.screenshot({ path: test.info().outputPath('screenshot.png') });
 });
 
-test('Video-Export mit OSM-Rasterstil gesperrt', async ({ page }) => {
-    // Keine Kacheln vom OSM-Tile-Server laden: automatisierte Zugriffe verbietet die Tile Usage Policy
+test('Video export disabled with OSM raster style', async ({ page }) => {
+    // Don't load tiles from the OSM tile server: the tile usage policy forbids automated access
     await page.route('https://tile.openstreetmap.org/**', (r) => r.abort());
     await page.goto('/index.html');
     await page.click('#demo');
-    // Abschnitt „Animation & Video“ ist standardmäßig zugeklappt
+    // The “Animation & Video” section is collapsed by default
     await page.locator('summary', { hasText: 'Animation' }).click();
     await expect(page.locator('#vid-export')).toBeEnabled();
     await expect(page.locator('#vid-style-hint')).toBeHidden();
@@ -93,7 +93,7 @@ test('Video-Export mit OSM-Rasterstil gesperrt', async ({ page }) => {
     await expect(page.locator('#vid-export')).toBeEnabled();
 });
 
-test('Englische Oberfläche über ?lang=en', async ({ page }) => {
+test('English UI via ?lang=en', async ({ page }) => {
     await page.goto('/index.html?lang=en');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.locator('#lang')).toHaveValue('en');
@@ -105,7 +105,7 @@ test('Englische Oberfläche über ?lang=en', async ({ page }) => {
     await expect(page.locator('#route-status')).toHaveText(/\d+ legs? · [\d,]+ km/, { timeout: 60 * 1000 });
 });
 
-test('Sprache in der Oberfläche umschalten', async ({ page }) => {
+test('Switch language in the UI', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('#lang')).toHaveValue('de');
     await page.click('#demo');
@@ -117,16 +117,16 @@ test('Sprache in der Oberfläche umschalten', async ({ page }) => {
     await expect(page.locator('.segment select[data-field="mode"]').first().locator('option:checked'))
         .toHaveText('Train (straight line)');
     await expect(page.locator('#route-status')).toHaveText(/\d+ legs? · [\d,]+ km/);
-    // Stilnamen werden ebenfalls übersetzt
+    // Style names are translated as well
     await expect(page.locator('#style option[value="satellite"]')).toHaveText('Satellite (Sentinel-2 2016)');
 
-    // Wahl bleibt nach dem Neuladen erhalten
+    // The choice persists after reloading
     await page.reload();
     await expect(page.locator('#lang')).toHaveValue('en');
 });
 
-test('Ortssuche fragt Photon in der gewählten Sprache an', async ({ page }) => {
-    // Photon nicht wirklich anfragen: Antwort simulieren und Sprachparameter prüfen
+test('Place search queries Photon in the selected language', async ({ page }) => {
+    // Don't actually query Photon: mock the response and check the language parameter
     const langs = [];
     const zooms = [];
     await page.route('https://photon.komoot.io/**', (r) => {
@@ -149,7 +149,7 @@ test('Ortssuche fragt Photon in der gewählten Sprache an', async ({ page }) => 
     await page.fill('#search', 'Munich');
     await expect(page.locator('#search-results li')).toHaveText('Munich, Bavaria, Germany');
     expect(langs).toEqual(['en']);
-    // Zoom der Karte als Gewichtung, sonst bevorzugt Photon Straßen in der Nähe (Zoom 16)
+    // Map zoom as bias, otherwise Photon prefers nearby streets (zoom 16)
     expect(Number(zooms[0])).toBeLessThan(10);
     await page.keyboard.press('Enter');
     await expect(page.locator('.stop .name')).toHaveText(['Munich']);
