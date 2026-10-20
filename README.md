@@ -26,7 +26,10 @@ no build step, using open data from OpenStreetMap.
 - **Save & share:** state is stored in the link (URL hash) and in the browser;
   import/export as JSON, export as GeoJSON.
 
-The user interface is in German.
+- **Languages:** the user interface is available in German and English. It
+  follows the browser language, can be switched in the sidebar or set with
+  `?lang=de` / `?lang=en` in the URL. Place search results and the place names
+  of the vector map styles (also in exports) follow the selected language.
 
 ## Running locally
 
@@ -37,8 +40,7 @@ so use any local web server, for example:
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000> and start with „lade eine Beispielroute“
-(load a sample route).
+Then open <http://localhost:8000> and start with “load a sample route”.
 
 Any static web hosting is enough to host it.
 
@@ -71,6 +73,7 @@ devices – the export just takes longer there.
 | `js/map.js` | Map styles, custom layers, offscreen map |
 | `js/animation.js` | Timeline and camera movement |
 | `js/export.js` | Image and video export |
+| `js/i18n.js` | Translations (German, English) and language selection |
 | `js/main.js` | UI wiring |
 
 ## External services and privacy
@@ -97,7 +100,12 @@ only Python 3 and Google Chrome):
 test/run-selftest.sh                     # default
 test/run-selftest.sh "style=dark&type=webm&camera=overview"
 test/screenshot.sh test/demo-state.json  # screenshot of the UI
+test/screenshot.sh test/demo-state.json 1400,900 .test/en.png "lang=en"
 ```
+
+Screenshots are taken in real time via the Chrome DevTools protocol
+(`test/cdp_screenshot.py`), so routing and rendering behave as in a normal
+browser.
 
 Results end up in `.test/` (not versioned).
 
@@ -105,7 +113,7 @@ On every push to `main` and on pull requests, GitHub Actions runs:
 
 - **JS syntax** – `node --check` for all scripts,
 - **Smoke tests** – the UI with Playwright (`test/smoke.spec.js`): startup,
-  sample route, editing stops, state from link,
+  sample route, editing stops, state from link, languages and localized search,
 - **Export self-test** – `test/selftest.html` with Playwright
   (`test/export.spec.js`) as MP4 and WebM; the exported files are attached to
   the workflow run as an artifact.

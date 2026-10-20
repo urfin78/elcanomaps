@@ -2,6 +2,7 @@
 
 import { MODES, VEHICLES } from './state.js';
 import { sliceLine } from './geo.js';
+import { getLang } from './i18n.js';
 
 const OSM = '© OpenStreetMap contributors';
 const OFM = `© OpenFreeMap © OpenMapTiles ${OSM}`;
@@ -24,21 +25,20 @@ function rasterStyle(tiles, attribution, maxzoom) {
     };
 }
 
+// Beschriftungen der Stile kommen aus js/i18n.js (style.<id>)
 export const STYLES = {
-    liberty: { label: 'Liberty', style: 'https://tiles.openfreemap.org/styles/liberty', attribution: OFM },
-    bright: { label: 'Bright', style: 'https://tiles.openfreemap.org/styles/bright', attribution: OFM },
-    positron: { label: 'Positron (hell)', style: 'https://tiles.openfreemap.org/styles/positron', attribution: OFM },
-    dark: { label: 'Dark', style: 'https://tiles.openfreemap.org/styles/dark', attribution: OFM },
-    fiord: { label: 'Fiord', style: 'https://tiles.openfreemap.org/styles/fiord', attribution: OFM },
+    liberty: { style: 'https://tiles.openfreemap.org/styles/liberty', attribution: OFM },
+    bright: { style: 'https://tiles.openfreemap.org/styles/bright', attribution: OFM },
+    positron: { style: 'https://tiles.openfreemap.org/styles/positron', attribution: OFM },
+    dark: { style: 'https://tiles.openfreemap.org/styles/dark', attribution: OFM },
+    fiord: { style: 'https://tiles.openfreemap.org/styles/fiord', attribution: OFM },
     osm: {
-        label: 'OpenStreetMap (Raster)',
         style: rasterStyle('https://tile.openstreetmap.org/{z}/{x}/{y}.png', OSM, 19),
         attribution: OSM,
         // Tile Usage Policy: keine Kacheln laden, die niemand ansieht (Kamerafahrt im Video-Export)
         noVideo: true,
     },
     satellite: {
-        label: 'Satellit (Sentinel-2 2016)',
         style: rasterStyle(
             'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg',
             EOX,
@@ -51,6 +51,27 @@ export const STYLES = {
 const styleEntry = (id) => STYLES[id] || STYLES.liberty;
 export const attributionFor = (id) => styleEntry(id).attribution;
 export const videoAllowed = (id) => !styleEntry(id).noVideo;
+
+// --- Ortsnamen der Grundkarte in der gewählten Sprache ---
+
+const OVERLAY_SOURCES = new Set(['route', 'progress', 'stops', 'vehicle']);
+
+// Vektorkacheln (OpenMapTiles-Schema) enthalten name:<sprache>; die Stile zeigen sonst name_en.
+// Originalausdruck bleibt als Rückfall erhalten (z. B. lateinisch + nicht-lateinisch).
+export function localizeLabels(map, lang = getLang()) {
+    if (!map._labelFields) {
+        map._labelFields = new Map();
+        for (const layer of map.getStyle()?.layers || []) {
+            const field = layer.layout?.['text-field'];
+            if (layer.type !== 'symbol' || !field || OVERLAY_SOURCES.has(layer.source)) continue;
+            if (/["{]name/.test(JSON.stringify(field))) map._labelFields.set(layer.id, field);
+        }
+    }
+    for (const [id, field] of map._labelFields) {
+        const fallback = Array.isArray(field) ? field : ['get', 'name'];
+        map.setLayoutProperty(id, 'text-field', ['coalesce', ['get', `name:${lang}`], fallback]);
+    }
+}
 
 // --- Fahrzeug-Icons: Emoji in einem runden Badge ---
 
@@ -235,6 +256,9 @@ function registerHandlers(map) {
         }
     });
     map.on('style.load', () => {
+        // Neuer Stil: Beschriftungen neu erfassen und lokalisieren
+        map._labelFields = null;
+        localizeLabels(map);
         addOverlayLayers(map);
         if (map._elcano) syncMap(map, map._elcano.state, map._elcano.route);
     });

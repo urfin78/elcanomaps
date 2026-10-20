@@ -20,6 +20,8 @@ module.exports = defineConfig({
         // Installiertes Google Chrome statt Playwright-Chromium: enthält H.264 für den MP4-Export
         channel: 'chrome',
         viewport: { width: 1400, height: 900 },
+        // Oberfläche folgt der Browsersprache; Tests prüfen standardmäßig die deutschen Texte
+        locale: 'de-DE',
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         launchOptions: {

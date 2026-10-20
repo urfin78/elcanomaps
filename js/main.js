@@ -5,10 +5,11 @@ import {
     addStop, removeStop, moveStop, setSegment,
     MODES, VEHICLES, IMAGE_PRESETS, VIDEO_PRESETS,
 } from './state.js';
-import { createMap, setMapStyle, syncMap, setAnimationFrame, videoAllowed, STYLES } from './map.js';
+import { createMap, setMapStyle, syncMap, setAnimationFrame, videoAllowed, localizeLabels, STYLES } from './map.js';
 import { searchPlaces, buildRoute } from './routing.js';
 import { buildTimeline, cameraPlan, cameraAt, frameAt } from './animation.js';
-import { renderImage, renderVideo, download, OSM_VIDEO_HINT } from './export.js';
+import { renderImage, renderVideo, download } from './export.js';
+import { t, getLang, setLang, onLangChange, translateDom, formatNumber, LANGUAGES } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -16,24 +17,20 @@ const options = (entries, selected) => entries
     .map(([value, label]) => `<option value="${esc(value)}"${value === selected ? ' selected' : ''}>${esc(label)}</option>`)
     .join('');
 
-const DEMO = {
-    stops: [
-        { name: 'Hamburg', lng: 9.9937, lat: 53.5511 },
-        { name: 'Berlin', lng: 13.405, lat: 52.52 },
-        { name: 'Prag', lng: 14.4378, lat: 50.0755 },
-        { name: 'Wien', lng: 16.3738, lat: 48.2082 },
-        { name: 'Lissabon', lng: -9.1393, lat: 38.7223 },
-        { name: 'Sintra', lng: -9.3817, lat: 38.8029 },
-    ],
-    segments: [
-        { mode: 'train' },
-        { mode: 'car' },
-        { mode: 'car' },
-        { mode: 'flight' },
-        { mode: 'bike' },
-    ],
-    title: 'Europa-Reise 2026',
-};
+// Beispielroute; Ortsnamen und Titel in der aktuellen Sprache
+const DEMO_COORDS = [[9.9937, 53.5511], [13.405, 52.52], [14.4378, 50.0755], [16.3738, 48.2082], [-9.1393, 38.7223], [-9.3817, 38.8029]];
+const DEMO_MODES = ['train', 'car', 'car', 'flight', 'bike'];
+
+function demoRoute() {
+    const names = t('demo.stops');
+    return {
+        stops: DEMO_COORDS.map(([lng, lat], i) => ({ name: names[i], lng, lat })),
+        segments: DEMO_MODES.map((mode) => ({ mode })),
+        title: t('demo.title'),
+    };
+}
+
+translateDom();
 
 const map = createMap('map', state);
 
@@ -68,21 +65,31 @@ async function refreshRoute() {
     const my = ++generation;
     stopPreview();
     syncMap(map, state, route);
-    $('route-status').textContent = state.segments.length ? 'Berechne Route …' : '';
+    computing = state.segments.length > 0;
+    renderStatus();
     const next = await buildRoute(state);
     if (my !== generation) return;
     route = next;
+    computing = false;
     syncMap(map, state, route);
-    if (route.segments.length) {
-        const km = Math.round(route.length).toLocaleString('de-DE');
-        const n = route.segments.length;
-        $('route-status').textContent = [`${n} Abschnitt${n > 1 ? 'e' : ''} · ${km} km`, ...route.errors].join('\n');
-    } else {
-        $('route-status').textContent = '';
-    }
+    renderStatus();
     if (fit && route.bbox) {
         map.fitBounds(route.bbox, { padding: 60, maxZoom: 11, duration: 800 });
     }
+}
+
+let computing = false;
+
+function renderStatus() {
+    let text = '';
+    if (computing) {
+        text = t('status.computing');
+    } else if (route?.segments.length) {
+        const n = route.segments.length;
+        const km = formatNumber(Math.round(route.length));
+        text = [t(n === 1 ? 'status.legs.one' : 'status.legs.other', { n, km }), ...route.errors].join('\n');
+    }
+    $('route-status').textContent = text;
 }
 
 // --- Stopps-Liste ---
@@ -90,10 +97,11 @@ async function refreshRoute() {
 function segmentHtml(i) {
     const seg = state.segments[i];
     const auto = VEHICLES[MODES[seg.mode].vehicle];
-    const vehicles = Object.entries(VEHICLES).map(([k, v]) => [k, `${v.emoji} ${v.label}`]);
+    const modes = Object.keys(MODES).map((k) => [k, t(`mode.${k}`)]);
+    const vehicles = Object.entries(VEHICLES).map(([k, v]) => [k, `${v.emoji} ${t(`vehicle.${k}`)}`]);
     return `<div class="segment" data-segment="${i}">
-        <select data-field="mode" aria-label="Verkehrsmittel">${options(Object.entries(MODES).map(([k, m]) => [k, m.label]), seg.mode)}</select>
-        <select data-field="vehicle" aria-label="Animationsfahrzeug">${options([['', `${auto.emoji} automatisch`], ...vehicles], seg.vehicle || '')}</select>
+        <select data-field="mode" aria-label="${esc(t('segment.mode'))}">${options(modes, seg.mode)}</select>
+        <select data-field="vehicle" aria-label="${esc(t('segment.vehicle'))}">${options([['', `${auto.emoji} ${t('segment.auto')}`], ...vehicles], seg.vehicle || '')}</select>
     </div>`;
 }
 
@@ -101,12 +109,12 @@ function renderStops() {
     const last = state.stops.length - 1;
     $('stops').innerHTML = state.stops.map((p, i) => `${i > 0 ? segmentHtml(i - 1) : ''}
         <div class="stop" draggable="true" data-index="${i}">
-            <span class="handle" title="Ziehen zum Sortieren">⋮⋮</span>
+            <span class="handle" title="${esc(t('stop.drag'))}">⋮⋮</span>
             <span class="num">${i + 1}</span>
             <span class="name" title="${esc(p.name)}">${esc(p.name)}</span>
-            <button type="button" data-action="up" title="Nach oben"${i === 0 ? ' disabled' : ''}>↑</button>
-            <button type="button" data-action="down" title="Nach unten"${i === last ? ' disabled' : ''}>↓</button>
-            <button type="button" data-action="remove" title="Entfernen">✕</button>
+            <button type="button" data-action="up" title="${esc(t('stop.up'))}"${i === 0 ? ' disabled' : ''}>↑</button>
+            <button type="button" data-action="down" title="${esc(t('stop.down'))}"${i === last ? ' disabled' : ''}>↓</button>
+            <button type="button" data-action="remove" title="${esc(t('stop.remove'))}">✕</button>
         </div>`).join('');
     $('empty-hint').hidden = state.stops.length > 0;
 }
@@ -229,14 +237,22 @@ resultsEl.addEventListener('mousedown', (e) => {
 });
 searchInput.addEventListener('blur', () => setTimeout(hideResults, 150));
 
-$('demo').addEventListener('click', () => replace({ ...state, ...DEMO }));
+$('demo').addEventListener('click', () => replace({ ...state, ...demoRoute() }));
 
 // --- Karte & Export-Einstellungen ---
 
-$('vid-style-hint').textContent = OSM_VIDEO_HINT;
-$('style').innerHTML = options(Object.entries(STYLES).map(([k, s]) => [k, s.label]), state.style);
-$('img-preset').innerHTML = options(Object.entries(IMAGE_PRESETS).map(([k, p]) => [k, p.label]), state.image.preset);
-$('vid-preset').innerHTML = options(Object.entries(VIDEO_PRESETS).map(([k, p]) => [k, p.label]), state.video.preset);
+const presetLabel = (k, p) => (p.width ? `${t(`format.${k}`)} (${p.width}×${p.height})` : t(`format.${k}`));
+
+// Auswahllisten mit übersetzten Beschriftungen (bei Sprachwechsel neu)
+function renderOptions() {
+    $('lang').innerHTML = options(Object.entries(LANGUAGES), getLang());
+    $('style').innerHTML = options(Object.keys(STYLES).map((k) => [k, t(`style.${k}`)]), state.style);
+    $('img-preset').innerHTML = options(Object.entries(IMAGE_PRESETS).map(([k, p]) => [k, presetLabel(k, p)]), state.image.preset);
+    $('vid-preset').innerHTML = options(Object.entries(VIDEO_PRESETS).map(([k, p]) => [k, presetLabel(k, p)]), state.video.preset);
+}
+
+renderOptions();
+$('lang').addEventListener('change', (e) => setLang(e.target.value));
 
 // Nur bei Abweichung setzen, sonst springt der Cursor beim Tippen ans Ende
 function setValue(id, value) {
@@ -263,7 +279,10 @@ function renderControls() {
     // Laufenden Export weiter abbrechbar lassen
     const noVideo = !videoAllowed(state.style);
     $('vid-export').disabled = noVideo && !exportAbort;
+    $('vid-export').textContent = t(exportAbort ? 'video.cancel' : 'video.export');
     $('vid-style-hint').hidden = !noVideo;
+    $('preview').textContent = t(preview ? 'video.stop' : 'video.preview');
+    if (!$('img-export').disabled) $('img-export').textContent = t('image.export');
 }
 
 function bind(id, event, apply) {
@@ -299,12 +318,12 @@ function stopPreview() {
     cancelAnimationFrame(preview.raf);
     preview = null;
     setAnimationFrame(map, null);
-    $('preview').textContent = '▶ Vorschau';
+    $('preview').textContent = t('video.preview');
 }
 
 function startPreview() {
     if (!route?.segments.length) {
-        toast('Für die Animation werden mindestens zwei Stopps benötigt.');
+        toast(t('video.needTwoAnim'));
         return;
     }
     const tl = buildTimeline(route, state.video.duration);
@@ -321,7 +340,7 @@ function startPreview() {
         preview.raf = requestAnimationFrame(step);
     };
     preview = { raf: requestAnimationFrame(step) };
-    $('preview').textContent = '■ Stopp';
+    $('preview').textContent = t('video.stop');
 }
 
 $('preview').addEventListener('click', () => (preview ? stopPreview() : startPreview()));
@@ -336,11 +355,11 @@ function fileBase() {
 $('img-export').addEventListener('click', async () => {
     const btn = $('img-export');
     if (!route?.bbox) {
-        toast('Bitte zuerst Stopps hinzufügen.');
+        toast(t('route.addStopsFirst'));
         return;
     }
     btn.disabled = true;
-    btn.textContent = 'Exportiere …';
+    btn.textContent = t('image.exporting');
     try {
         const blob = await renderImage(structuredClone(state), route, state.image);
         const ext = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[state.image.type];
@@ -350,7 +369,7 @@ $('img-export').addEventListener('click', async () => {
         toast(e.message);
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Bild exportieren';
+        btn.textContent = t('image.export');
     }
 });
 
@@ -362,14 +381,14 @@ $('vid-export').addEventListener('click', async () => {
         return;
     }
     if (!route?.segments.length) {
-        toast('Für ein Video werden mindestens zwei Stopps benötigt.');
+        toast(t('video.needTwo'));
         return;
     }
     stopPreview();
     const btn = $('vid-export');
     const bar = $('vid-progress');
     exportAbort = new AbortController();
-    btn.textContent = 'Abbrechen';
+    btn.textContent = t('video.cancel');
     bar.value = 0;
     bar.hidden = false;
     try {
@@ -381,17 +400,16 @@ $('vid-export').addEventListener('click', async () => {
             { onProgress: (p) => { bar.value = p; }, signal: exportAbort.signal },
         );
         download(blob, `${fileBase()}${extension}`);
-        toast('Video exportiert.');
+        toast(t('video.done'));
     } catch (e) {
         if (e.name === 'AbortError') {
-            toast('Export abgebrochen.');
+            toast(t('video.aborted'));
         } else {
             console.error(e);
             toast(e.message);
         }
     } finally {
         exportAbort = null;
-        btn.textContent = 'Video exportieren';
         bar.hidden = true;
         renderControls();
     }
@@ -403,9 +421,9 @@ $('share').addEventListener('click', async () => {
     const url = shareUrl(state);
     try {
         await navigator.clipboard.writeText(url);
-        toast('Link in die Zwischenablage kopiert.');
+        toast(t('share.copied'));
     } catch {
-        prompt('Link kopieren:', url);
+        prompt(t('share.prompt'), url);
     }
 });
 
@@ -420,9 +438,9 @@ $('file').addEventListener('change', async (e) => {
     if (!file) return;
     try {
         replace(JSON.parse(await file.text()));
-        toast('Route geladen.');
+        toast(t('share.loaded'));
     } catch {
-        toast('Datei konnte nicht gelesen werden.');
+        toast(t('share.fileError'));
     }
 });
 
@@ -445,7 +463,7 @@ $('save-geojson').addEventListener('click', () => {
 });
 
 $('clear').addEventListener('click', () => {
-    if (state.stops.length && !confirm('Alle Stopps entfernen?')) return;
+    if (state.stops.length && !confirm(t('share.clearConfirm'))) return;
     update((s) => {
         s.stops = [];
         s.segments = [];
@@ -469,3 +487,13 @@ function render() {
 
 subscribe(render);
 render();
+
+// Sprachwechsel: statische Texte, Auswahllisten, Stoppliste, Status und Kartenbeschriftung
+onLangChange((lang) => {
+    translateDom();
+    renderOptions();
+    renderStops();
+    renderControls();
+    renderStatus();
+    if (map.isStyleLoaded()) localizeLabels(map, lang);
+});

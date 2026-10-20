@@ -86,9 +86,66 @@ test('Video-Export mit OSM-Rasterstil gesperrt', async ({ page }) => {
     await page.selectOption('#style', 'osm');
     await expect(page.locator('#vid-export')).toBeDisabled();
     await expect(page.locator('#vid-style-hint')).toBeVisible();
-    await expect(page.locator('#vid-style-hint')).toContainText('tile usage policy');
+    await expect(page.locator('#vid-style-hint')).toContainText(/tile usage policy/i);
     await expect(page.locator('.maplibregl-ctrl-attrib')).not.toHaveClass(/maplibregl-compact/);
 
     await page.selectOption('#style', 'liberty');
     await expect(page.locator('#vid-export')).toBeEnabled();
+});
+
+test('Englische Oberfläche über ?lang=en', async ({ page }) => {
+    await page.goto('/index.html?lang=en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('#lang')).toHaveValue('en');
+    await expect(page.locator('summary').first()).toHaveText('Route');
+    await expect(page.locator('#search')).toHaveAttribute('placeholder', 'Search and add a place …');
+    await page.click('#demo');
+    await expect(page.locator('#title')).toHaveValue('Europe trip 2026');
+    await expect(page.locator('.stop .name').nth(2)).toHaveText('Prague');
+    await expect(page.locator('#route-status')).toHaveText(/\d+ legs? · [\d,]+ km/, { timeout: 60 * 1000 });
+});
+
+test('Sprache in der Oberfläche umschalten', async ({ page }) => {
+    await page.goto('/index.html');
+    await expect(page.locator('#lang')).toHaveValue('de');
+    await page.click('#demo');
+    await expect(page.locator('#route-status')).toHaveText(ROUTE_STATUS, { timeout: 60 * 1000 });
+
+    await page.selectOption('#lang', 'en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('#img-export')).toHaveText('Export image');
+    await expect(page.locator('.segment select[data-field="mode"]').first().locator('option:checked'))
+        .toHaveText('Train (straight line)');
+    await expect(page.locator('#route-status')).toHaveText(/\d+ legs? · [\d,]+ km/);
+    // Stilnamen werden ebenfalls übersetzt
+    await expect(page.locator('#style option[value="satellite"]')).toHaveText('Satellite (Sentinel-2 2016)');
+
+    // Wahl bleibt nach dem Neuladen erhalten
+    await page.reload();
+    await expect(page.locator('#lang')).toHaveValue('en');
+});
+
+test('Ortssuche fragt Photon in der gewählten Sprache an', async ({ page }) => {
+    // Photon nicht wirklich anfragen: Antwort simulieren und Sprachparameter prüfen
+    const langs = [];
+    await page.route('https://photon.komoot.io/**', (r) => {
+        langs.push(new URL(r.request().url()).searchParams.get('lang'));
+        r.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify({
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { name: 'Munich', state: 'Bavaria', country: 'Germany' },
+                    geometry: { type: 'Point', coordinates: [11.575, 48.137] },
+                }],
+            }),
+        });
+    });
+    await page.goto('/index.html?lang=en');
+    await page.fill('#search', 'Munich');
+    await expect(page.locator('#search-results li')).toHaveText('Munich, Bavaria, Germany');
+    expect(langs).toEqual(['en']);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.stop .name')).toHaveText(['Munich']);
 });
