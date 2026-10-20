@@ -195,7 +195,7 @@ async function runSearch(q) {
     searchAbort = new AbortController();
     try {
         const c = map.getCenter();
-        results = await searchPlaces(q, { signal: searchAbort.signal, near: [c.lng, c.lat] });
+        results = await searchPlaces(q, { signal: searchAbort.signal, near: [c.lng, c.lat], zoom: map.getZoom() });
         active = -1;
         renderResults();
     } catch (e) {
@@ -495,5 +495,7 @@ onLangChange((lang) => {
     renderStops();
     renderControls();
     renderStatus();
-    if (map.isStyleLoaded()) localizeLabels(map, lang);
+    // Nicht isStyleLoaded(): ist false, solange Kacheln nachladen. Ohne erfasste
+    // Beschriftungen lokalisiert der style.load-Handler ohnehin mit der neuen Sprache.
+    if (map._labelFields) localizeLabels(map, lang);
 });

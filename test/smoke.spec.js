@@ -128,8 +128,11 @@ test('Sprache in der Oberfläche umschalten', async ({ page }) => {
 test('Ortssuche fragt Photon in der gewählten Sprache an', async ({ page }) => {
     // Photon nicht wirklich anfragen: Antwort simulieren und Sprachparameter prüfen
     const langs = [];
+    const zooms = [];
     await page.route('https://photon.komoot.io/**', (r) => {
-        langs.push(new URL(r.request().url()).searchParams.get('lang'));
+        const params = new URL(r.request().url()).searchParams;
+        langs.push(params.get('lang'));
+        zooms.push(params.get('zoom'));
         r.fulfill({
             contentType: 'application/json',
             body: JSON.stringify({
@@ -146,6 +149,8 @@ test('Ortssuche fragt Photon in der gewählten Sprache an', async ({ page }) => 
     await page.fill('#search', 'Munich');
     await expect(page.locator('#search-results li')).toHaveText('Munich, Bavaria, Germany');
     expect(langs).toEqual(['en']);
+    // Zoom der Karte als Gewichtung, sonst bevorzugt Photon Straßen in der Nähe (Zoom 16)
+    expect(Number(zooms[0])).toBeLessThan(10);
     await page.keyboard.press('Enter');
     await expect(page.locator('.stop .name')).toHaveText(['Munich']);
 });
