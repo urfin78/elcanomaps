@@ -10,17 +10,19 @@ const PHOTON_LANGS = new Set(['de', 'en', 'fr']);
 const OSRM_URL = 'https://routing.openstreetmap.de';
 const OSRM_PROFILES = { car: 'routed-car', bike: 'routed-bike', foot: 'routed-foot' };
 
-export async function searchPlaces(query, { signal, near } = {}) {
+export async function searchPlaces(query, { signal, near, zoom } = {}) {
     const lang = PHOTON_LANGS.has(getLang()) ? getLang() : 'default';
     const params = new URLSearchParams({ q: query, limit: '6', lang });
     if (near) {
         params.set('lon', near[0].toFixed(3));
         params.set('lat', near[1].toFixed(3));
+        // Ohne zoom nimmt Photon 16 (Straßenebene) an und bevorzugt nahe Straßen statt Städten
+        params.set('zoom', String(Math.round(zoom ?? 4)));
     }
     const res = await fetch(`${PHOTON_URL}?${params}`, { signal });
     if (!res.ok) throw new Error(t('search.failed', { status: res.status }));
     const json = await res.json();
-    return json.features.map((f) => {
+    const results = json.features.map((f) => {
         const p = f.properties;
         const parts = [p.name, p.city !== p.name ? p.city : null, p.state, p.country];
         return {
@@ -30,6 +32,8 @@ export async function searchPlaces(query, { signal, near } = {}) {
             lat: f.geometry.coordinates[1],
         };
     });
+    // Gleich beschriftete Treffer (z. B. Straße und Haltestelle) nur einmal anzeigen
+    return results.filter((r, i) => results.findIndex((o) => o.label === r.label) === i);
 }
 
 // Cache über Promises, damit identische Anfragen nicht doppelt laufen
