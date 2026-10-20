@@ -1,7 +1,7 @@
-"""Statischer Testserver mit Upload-Endpunkt (nur Python-Standardbibliothek).
+"""Static test server with an upload endpoint (Python standard library only).
 
-GET  liefert Dateien aus dem Projektordner.
-POST /upload/<name> speichert den Request-Body nach .test/<name>.
+GET  serves files from the project folder.
+POST /upload/<name> stores the request body in .test/<name>.
 """
 
 import os

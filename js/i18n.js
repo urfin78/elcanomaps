@@ -1,4 +1,4 @@
-// Übersetzungen der Oberfläche und Sprachwahl (URL ?lang= → gespeicherte Wahl → Browser → Englisch)
+// UI translations and language selection (URL ?lang= → stored choice → browser → English)
 
 export const LANGUAGES = { de: 'Deutsch', en: 'English' };
 const FALLBACK = 'en';
@@ -278,7 +278,7 @@ export function t(key, params = {}) {
     return msg.replace(/\{(\w+)\}/g, (m, name) => (name in params ? params[name] : m));
 }
 
-// Statische Texte im DOM: data-i18n (Text), data-i18n-placeholder, data-i18n-title, data-i18n-aria-label
+// Static texts in the DOM: data-i18n (text), data-i18n-placeholder, data-i18n-title, data-i18n-aria-label
 export function translateDom(root = document) {
     document.documentElement.lang = current;
     document.title = t('app.title');
@@ -296,7 +296,7 @@ export function setLang(lang) {
     try {
         localStorage.setItem(STORAGE_KEY, lang);
     } catch {
-        // Wahl gilt dann nur bis zum Neuladen
+        // the choice then only lasts until the next reload
     }
     for (const fn of listeners) fn(lang);
 }
@@ -306,5 +306,5 @@ export function onLangChange(fn) {
     return () => listeners.delete(fn);
 }
 
-// Zahlen im Format der gewählten Sprache
+// Numbers in the format of the selected language
 export const formatNumber = (n) => n.toLocaleString(current);

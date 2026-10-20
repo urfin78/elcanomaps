@@ -1,7 +1,7 @@
 name: Auto Release
 
-# Manuell auslösen: Version aus Conventional Commits seit dem letzten Tag ableiten,
-# GitHub-Release anlegen und die statischen App-Dateien auf den Branch gh-pages veröffentlichen.
+# Triggered manually: derive the version from Conventional Commits since the last tag,
+# create a GitHub release and publish the static app files to the gh-pages branch.
 on:
   workflow_dispatch:
 
@@ -19,13 +19,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Letzten Tag ermitteln
+      - name: Determine latest tag
         id: latest_tag
         run: |
           latest=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
           echo "tag=${latest:-v0.0.0}" >> $GITHUB_OUTPUT
 
-      - name: Versionssprung aus Commits bestimmen
+      - name: Determine version bump from commits
         id: bump
         run: |
           latest="${{ steps.latest_tag.outputs.tag }}"
@@ -44,7 +44,7 @@ jobs:
             echo "bump=patch" >> $GITHUB_OUTPUT
           fi
 
-      - name: Neue Version berechnen
+      - name: Compute new version
         id: version
         if: steps.bump.outputs.bump != 'none'
         run: |
@@ -60,7 +60,7 @@ jobs:
           esac
           echo "tag=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
 
-      - name: Release Notes erzeugen
+      - name: Generate release notes
         if: steps.bump.outputs.bump != 'none'
         run: |
           latest="${{ steps.latest_tag.outputs.tag }}"
@@ -72,7 +72,7 @@ jobs:
               | grep -v "^- Merge" > release_notes.txt
           fi
 
-      - name: GitHub-Release anlegen
+      - name: Create GitHub release
         if: steps.bump.outputs.bump != 'none'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,22 +81,22 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes-file release_notes.txt
 
-      - name: Auf GitHub Pages veröffentlichen
+      - name: Publish to GitHub Pages
         if: steps.bump.outputs.bump != 'none'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Nur die Dateien der App ausliefern (keine Tests, keine Workflows)
+          # Ship only the app files (no tests, no workflows)
           deploy=$(mktemp -d)
           cp -r index.html css js LICENSE THIRD_PARTY_NOTICES.md "$deploy/"
-          # Ohne .nojekyll verarbeitet GitHub Pages die Dateien mit Jekyll
+          # Without .nojekyll GitHub Pages processes the files with Jekyll
           touch "$deploy/.nojekyll"
           if git ls-remote --exit-code --heads origin gh-pages > /dev/null; then
             git checkout gh-pages
           else
             git checkout --orphan gh-pages
           fi
-          # Alten Stand vollständig ersetzen, damit gelöschte Dateien nicht liegen bleiben
+          # Replace the old state completely so deleted files don't remain
           git rm -rfq --ignore-unmatch .
           git clean -fdxq
           cp -r "$deploy/." .

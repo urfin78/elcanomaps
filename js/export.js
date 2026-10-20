@@ -1,4 +1,4 @@
-// Bild- und Video-Export über eine Offscreen-Karte in Zielauflösung
+// Image and video export via an offscreen map at the target resolution
 
 import { createOffscreenMap, waitIdle, attributionFor, setAnimationFrame, videoAllowed } from './map.js';
 import { buildTimeline, cameraPlan, cameraAt, frameAt } from './animation.js';
@@ -12,7 +12,7 @@ function roundRect(ctx, x, y, w, h, r) {
     ctx.fill();
 }
 
-// Titel und Quellenangabe in das Bild einbrennen
+// Burn title and attribution into the image
 function drawOverlay(ctx, width, height, { title, attribution }) {
     const s = Math.max(width, height) / 1080;
     ctx.save();
@@ -43,7 +43,7 @@ function drawOverlay(ctx, width, height, { title, attribution }) {
     ctx.restore();
 }
 
-// Platz für den Titel oben freihalten (in logischen Pixeln der Offscreen-Karte)
+// Keep space for the title at the top (in logical pixels of the offscreen map)
 function titleTop(state, width, height, off) {
     if (!state.title) return 0;
     const s = Math.max(width, height) / 1080;
@@ -110,7 +110,7 @@ export async function renderVideo(state, route, opts, { onProgress, onFrame, sig
         const plan = cameraPlan(off.map, tl, camera, titleTop(state, width, height, off));
         const frames = Math.round(duration * fps);
         for (let i = 0; i < frames; i++) {
-            if (signal?.aborted) throw new DOMException('Abgebrochen', 'AbortError');
+            if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
             const time = i / fps;
             setAnimationFrame(off.map, frameAt(tl, time));
             off.map.jumpTo(cameraAt(plan, tl, time));

@@ -18,13 +18,13 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Module und Testskripte mit node --check prüfen
+      - name: Check modules and test scripts with node --check
         run: |
           fail=0
           echo "## JS syntax" > "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           mkdir -p .ci-tmp
-          # App-Dateien sind ES-Module: als .mjs prüfen; Testskripte sind CommonJS
+          # App files are ES modules: check them as .mjs; test scripts are CommonJS
           for f in js/*.js test/*.js; do
             case "$f" in
               js/*) check=".ci-tmp/$(basename "$f" .js).mjs"; cp "$f" "$check" ;;
