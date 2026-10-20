@@ -2,10 +2,7 @@
 
 import { createOffscreenMap, waitIdle, attributionFor, setAnimationFrame, videoAllowed } from './map.js';
 import { buildTimeline, cameraPlan, cameraAt, frameAt } from './animation.js';
-
-export const OSM_VIDEO_HINT = 'Video export is not available with the OpenStreetMap (raster) style: '
-    + 'the OSM tile usage policy does not allow loading map tiles that nobody is viewing. '
-    + 'Please choose another map style, e.g. Liberty or Bright.';
+import { t } from './i18n.js';
 
 const MEDIABUNNY_URL = 'https://unpkg.com/mediabunny@1.61.6/dist/bundles/mediabunny.min.mjs';
 
@@ -72,7 +69,7 @@ function composite(target, map, state) {
 }
 
 export async function renderImage(state, route, { width, height, type }) {
-    if (!route?.bbox) throw new Error('Keine Route vorhanden.');
+    if (!route?.bbox) throw new Error(t('image.noRoute'));
     const off = await createOffscreenMap(state, route, width, height);
     try {
         off.map.jumpTo(overviewCamera(off.map, route, titleTop(state, width, height, off)));
@@ -82,7 +79,7 @@ export async function renderImage(state, route, { width, height, type }) {
         canvas.height = height;
         composite(canvas, off.map, state);
         return await new Promise((resolve, reject) => {
-            canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Bild konnte nicht erzeugt werden.')), type, 0.92);
+            canvas.toBlob((b) => b ? resolve(b) : reject(new Error(t('image.failed'))), type, 0.92);
         });
     } finally {
         off.destroy();
@@ -91,15 +88,13 @@ export async function renderImage(state, route, { width, height, type }) {
 
 export async function renderVideo(state, route, opts, { onProgress, onFrame, signal } = {}) {
     const { width, height, fps, duration, camera, type } = opts;
-    if (!route?.segments.length) throw new Error('Für ein Video werden mindestens zwei Stopps benötigt.');
-    if (!videoAllowed(state.style)) throw new Error(OSM_VIDEO_HINT);
-    if (typeof VideoEncoder === 'undefined') {
-        throw new Error('Dieser Browser unterstützt kein WebCodecs (VideoEncoder).');
-    }
+    if (!route?.segments.length) throw new Error(t('video.needTwo'));
+    if (!videoAllowed(state.style)) throw new Error(t('video.osmHint'));
+    if (typeof VideoEncoder === 'undefined') throw new Error(t('video.noWebCodecs'));
     const mb = await import(MEDIABUNNY_URL);
     const format = type === 'webm' ? new mb.WebMOutputFormat() : new mb.Mp4OutputFormat({ fastStart: 'in-memory' });
     const codec = await mb.getFirstEncodableVideoCodec(format.getSupportedVideoCodecs(), { width, height });
-    if (!codec) throw new Error(`Dieser Browser kann kein ${type.toUpperCase()}-Video in ${width}×${height} kodieren.`);
+    if (!codec) throw new Error(t('video.noCodec', { type: type.toUpperCase(), width, height }));
 
     const off = await createOffscreenMap(state, route, width, height);
     const canvas = document.createElement('canvas');

@@ -2,25 +2,29 @@
 
 import { MODES, vehicleOf } from './state.js';
 import { greatCircle, cumulative, bbox } from './geo.js';
+import { t, getLang } from './i18n.js';
 
 const PHOTON_URL = 'https://photon.komoot.io/api/';
+// Sprachen, die der öffentliche Photon-Server unterstützt; sonst Namen in Landessprache
+const PHOTON_LANGS = new Set(['de', 'en', 'fr']);
 const OSRM_URL = 'https://routing.openstreetmap.de';
 const OSRM_PROFILES = { car: 'routed-car', bike: 'routed-bike', foot: 'routed-foot' };
 
 export async function searchPlaces(query, { signal, near } = {}) {
-    const params = new URLSearchParams({ q: query, limit: '6', lang: 'de' });
+    const lang = PHOTON_LANGS.has(getLang()) ? getLang() : 'default';
+    const params = new URLSearchParams({ q: query, limit: '6', lang });
     if (near) {
         params.set('lon', near[0].toFixed(3));
         params.set('lat', near[1].toFixed(3));
     }
     const res = await fetch(`${PHOTON_URL}?${params}`, { signal });
-    if (!res.ok) throw new Error(`Suche fehlgeschlagen (${res.status})`);
+    if (!res.ok) throw new Error(t('search.failed', { status: res.status }));
     const json = await res.json();
     return json.features.map((f) => {
         const p = f.properties;
         const parts = [p.name, p.city !== p.name ? p.city : null, p.state, p.country];
         return {
-            name: p.name || p.city || p.country || 'Ort',
+            name: p.name || p.city || p.country || t('search.place'),
             label: [...new Set(parts.filter(Boolean))].join(', '),
             lng: f.geometry.coordinates[0],
             lat: f.geometry.coordinates[1],
@@ -52,7 +56,7 @@ function fetchRoute(mode, a, b) {
             .then((res) => res.json())
             .then((json) => {
                 if (json.code !== 'Ok' || !json.routes?.length) {
-                    throw new Error(json.message || 'Keine Route gefunden');
+                    throw new Error(json.message || t('route.notFound'));
                 }
                 return json.routes[0].geometry.coordinates;
             });
@@ -78,7 +82,7 @@ export async function buildRoute(state) {
             try {
                 coords = await fetchRoute(seg.mode, a, b);
             } catch (e) {
-                errors.push(`Abschnitt ${i + 1}: ${e.message} – Luftlinie verwendet`);
+                errors.push(t('route.fallback', { n: i + 1, message: e.message }));
                 coords = greatCircle(a, b);
             }
         } else {

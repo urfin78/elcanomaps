@@ -3,71 +3,77 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ElcanoMaps – Reiserouten als Bild & Video</title>
+    <title>ElcanoMaps</title>
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
     <script type="module" src="js/main.js"></script>
 </head>
 <body>
+    <!-- Texte werden aus js/i18n.js gesetzt (data-i18n*) -->
     <aside id="sidebar">
         <header>
-            <h1>ElcanoMaps</h1>
-            <p class="muted">Reiserouten als Bild &amp; Video</p>
+            <div class="title-row">
+                <h1>ElcanoMaps</h1>
+                <select id="lang" data-i18n-aria-label="lang.label" data-i18n-title="lang.label"></select>
+            </div>
+            <p class="muted" data-i18n="app.tagline"></p>
         </header>
 
         <details open>
-            <summary>Route</summary>
+            <summary data-i18n="section.route"></summary>
             <div class="search">
-                <input id="search" type="search" placeholder="Ort suchen und hinzufügen …" autocomplete="off" aria-label="Ort suchen">
+                <input id="search" type="search" autocomplete="off"
+                    data-i18n-placeholder="search.placeholder" data-i18n-aria-label="search.aria">
                 <ul id="search-results" hidden></ul>
             </div>
             <div id="stops"></div>
             <p id="empty-hint" class="muted">
-                Noch keine Stopps. Suche einen Ort oder
-                <button type="button" id="demo" class="link">lade eine Beispielroute</button>.
+                <span data-i18n="empty.before"></span>
+                <button type="button" id="demo" class="link" data-i18n="empty.demo"></button>.
             </p>
             <p id="route-status" class="muted"></p>
         </details>
 
         <details open>
-            <summary>Karte</summary>
-            <label>Kartenstil <select id="style"></select></label>
-            <label>Titel <input type="text" id="title" placeholder="z. B. Roadtrip 2026" maxlength="200"></label>
-            <label class="check"><input type="checkbox" id="show-labels"> Ortsnamen anzeigen</label>
-            <label class="check"><input type="checkbox" id="color-by-mode"> Farbe nach Verkehrsmittel</label>
-            <label id="line-color-row">Routenfarbe <input type="color" id="line-color"></label>
+            <summary data-i18n="section.map"></summary>
+            <label><span data-i18n="map.style"></span> <select id="style"></select></label>
+            <label><span data-i18n="map.title"></span>
+                <input type="text" id="title" maxlength="200" data-i18n-placeholder="map.titlePlaceholder"></label>
+            <label class="check"><input type="checkbox" id="show-labels"> <span data-i18n="map.showLabels"></span></label>
+            <label class="check"><input type="checkbox" id="color-by-mode"> <span data-i18n="map.colorByMode"></span></label>
+            <label id="line-color-row"><span data-i18n="map.lineColor"></span> <input type="color" id="line-color"></label>
         </details>
 
         <details>
-            <summary>Bild-Export</summary>
-            <label>Format <select id="img-preset"></select></label>
+            <summary data-i18n="section.image"></summary>
+            <label><span data-i18n="image.format"></span> <select id="img-preset"></select></label>
             <div class="row">
-                <label>Breite <input type="number" id="img-width" min="100" max="8000" step="1"></label>
-                <label>Höhe <input type="number" id="img-height" min="100" max="8000" step="1"></label>
+                <label><span data-i18n="image.width"></span> <input type="number" id="img-width" min="100" max="8000" step="1"></label>
+                <label><span data-i18n="image.height"></span> <input type="number" id="img-height" min="100" max="8000" step="1"></label>
             </div>
-            <label>Dateityp
+            <label><span data-i18n="image.type"></span>
                 <select id="img-type">
                     <option value="image/png">PNG</option>
                     <option value="image/jpeg">JPEG</option>
                     <option value="image/webp">WebP</option>
                 </select>
             </label>
-            <button type="button" id="img-export" class="primary">Bild exportieren</button>
+            <button type="button" id="img-export" class="primary" data-i18n="image.export"></button>
         </details>
 
         <details>
-            <summary>Animation &amp; Video</summary>
-            <label>Format <select id="vid-preset"></select></label>
-            <label>Kamera
+            <summary data-i18n="section.video"></summary>
+            <label><span data-i18n="video.format"></span> <select id="vid-preset"></select></label>
+            <label><span data-i18n="video.camera"></span>
                 <select id="vid-camera">
-                    <option value="follow">Fahrzeug folgen</option>
-                    <option value="overview">Gesamtansicht</option>
+                    <option value="follow" data-i18n="camera.follow"></option>
+                    <option value="overview" data-i18n="camera.overview"></option>
                 </select>
             </label>
             <div class="row">
-                <label>Dauer (s) <input type="number" id="vid-duration" min="3" max="120" step="1"></label>
-                <label>FPS
+                <label><span data-i18n="video.duration"></span> <input type="number" id="vid-duration" min="3" max="120" step="1"></label>
+                <label><span data-i18n="video.fps"></span>
                     <select id="vid-fps">
                         <option value="24">24</option>
                         <option value="30">30</option>
@@ -75,37 +81,36 @@
                     </select>
                 </label>
             </div>
-            <label>Dateityp
+            <label><span data-i18n="video.type"></span>
                 <select id="vid-type">
                     <option value="mp4">MP4</option>
                     <option value="webm">WebM</option>
                 </select>
             </label>
             <div class="row">
-                <button type="button" id="preview">▶ Vorschau</button>
-                <button type="button" id="vid-export" class="primary">Video exportieren</button>
+                <button type="button" id="preview"></button>
+                <button type="button" id="vid-export" class="primary"></button>
             </div>
             <progress id="vid-progress" max="1" value="0" hidden></progress>
-            <p id="vid-style-hint" class="muted small" hidden></p>
-            <p class="muted small">Während des Exports den Tab im Vordergrund lassen.</p>
+            <p id="vid-style-hint" class="muted small" data-i18n="video.osmHint" hidden></p>
+            <p class="muted small" data-i18n="video.foreground"></p>
         </details>
 
         <details>
-            <summary>Speichern &amp; Teilen</summary>
+            <summary data-i18n="section.share"></summary>
             <div class="row wrap">
-                <button type="button" id="share">Link kopieren</button>
-                <button type="button" id="save-json">JSON speichern</button>
-                <button type="button" id="load-json">JSON laden</button>
-                <button type="button" id="save-geojson">GeoJSON</button>
-                <button type="button" id="clear" class="danger">Route leeren</button>
+                <button type="button" id="share" data-i18n="share.link"></button>
+                <button type="button" id="save-json" data-i18n="share.saveJson"></button>
+                <button type="button" id="load-json" data-i18n="share.loadJson"></button>
+                <button type="button" id="save-geojson" data-i18n="share.geojson"></button>
+                <button type="button" id="clear" class="danger" data-i18n="share.clear"></button>
             </div>
             <input type="file" id="file" accept=".json,application/json" hidden>
         </details>
 
         <footer class="muted small">
-            Kartendaten © OpenStreetMap-Mitwirkende · Suche: Photon (komoot) ·
-            Routing: FOSSGIS OSRM · Karten: OpenFreeMap, EOX ·
-            <a href="THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Lizenzen</a>
+            <span data-i18n="footer.credits"></span>
+            <a href="THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener" data-i18n="footer.licenses"></a>
         </footer>
     </aside>
     <main id="map"></main>
