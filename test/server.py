@@ -31,7 +31,8 @@ class Handler(SimpleHTTPRequestHandler):
 
         out_real = os.path.realpath(OUT)
         dest = os.path.realpath(os.path.join(out_real, name))
-        if os.path.commonpath([out_real, dest]) != out_real:
+        # normalize + startswith is the guard CodeQL recognizes (commonpath is not)
+        if not dest.startswith(out_real + os.sep):
             self.send_error(400)
             return
 
