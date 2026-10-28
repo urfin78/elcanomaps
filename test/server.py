@@ -36,7 +36,15 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_error(400)
             return
 
-        length = int(self.headers.get("Content-Length", 0))
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            length = -1
+        # A negative length would make rfile.read() block until the client disconnects
+        if length < 0:
+            self.send_error(400)
+            return
+
         with open(dest, "wb") as f:
             f.write(self.rfile.read(length))
         self.send_response(204)
