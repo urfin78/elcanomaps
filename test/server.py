@@ -8,6 +8,7 @@ import os
 import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, ".test")
@@ -15,11 +16,13 @@ OUT = os.path.join(ROOT, ".test")
 
 class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
-        if not self.path.startswith("/upload/"):
+        # Query string and fragment are not part of the file name
+        path = urlsplit(self.path).path
+        if not path.startswith("/upload/"):
             self.send_error(404)
             return
 
-        name = self.path[len("/upload/") :]
+        name = path[len("/upload/") :]
         if (
             not name
             or name in (".", "..")
