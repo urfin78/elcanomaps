@@ -15,12 +15,29 @@ OUT = os.path.join(ROOT, ".test")
 
 class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
-        name = os.path.basename(self.path)
-        if not self.path.startswith("/upload/") or not name:
+        if not self.path.startswith("/upload/"):
             self.send_error(404)
             return
+
+        name = self.path[len("/upload/") :]
+        if (
+            not name
+            or name in (".", "..")
+            or "/" in name
+            or "\\" in name
+        ):
+            self.send_error(400)
+            return
+
+        out_real = os.path.realpath(OUT)
+        dest = os.path.realpath(os.path.join(out_real, name))
+        # normalize + startswith is the guard CodeQL recognizes (commonpath is not)
+        if not dest.startswith(out_real + os.sep):
+            self.send_error(400)
+            return
+
         length = int(self.headers.get("Content-Length", 0))
-        with open(os.path.join(OUT, name), "wb") as f:
+        with open(dest, "wb") as f:
             f.write(self.rfile.read(length))
         self.send_response(204)
         self.end_headers()
