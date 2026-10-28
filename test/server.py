@@ -42,6 +42,14 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(204)
         self.end_headers()
 
+    def send_head(self):
+        # Hide dotfiles and dot directories (.git, .test, .github, ...) from GET/HEAD
+        rel = os.path.relpath(self.translate_path(self.path), self.directory)
+        if any(part.startswith(".") for part in rel.split(os.sep) if part != "."):
+            self.send_error(404)
+            return None
+        return super().send_head()
+
     def log_message(self, fmt, *args):
         sys.stderr.write(fmt % args + "\n")
 
