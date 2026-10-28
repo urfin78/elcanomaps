@@ -1,4 +1,4 @@
-// Kartenstile, eigene Layer (Route, Stopps, Fahrzeug) und Offscreen-Karten für den Export
+// Map styles, custom layers (route, stops, vehicle) and offscreen maps for export
 
 import { MODES, VEHICLES } from './state.js';
 import { sliceLine } from './geo.js';
@@ -9,7 +9,7 @@ const OFM = `© OpenFreeMap © OpenMapTiles ${OSM}`;
 const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 const FONT = ['Noto Sans Bold'];
 const EOX = 'EOxCloudless – https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)';
-// Pflichtangaben der Dienste ohne eigene Kartenquelle (FOSSGIS-Nutzungsbedingungen, OSM Tile Usage Policy)
+// Required attribution of services without their own map source (FOSSGIS terms of use, OSM tile usage policy)
 const LINK = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
 const SERVICE_ATTRIBUTION = [
     LINK('https://routing.openstreetmap.de/about.html', 'Routing: FOSSGIS OSRM'),
@@ -25,7 +25,7 @@ function rasterStyle(tiles, attribution, maxzoom) {
     };
 }
 
-// Beschriftungen der Stile kommen aus js/i18n.js (style.<id>)
+// Style labels come from js/i18n.js (style.<id>)
 export const STYLES = {
     liberty: { style: 'https://tiles.openfreemap.org/styles/liberty', attribution: OFM },
     bright: { style: 'https://tiles.openfreemap.org/styles/bright', attribution: OFM },
@@ -35,7 +35,7 @@ export const STYLES = {
     osm: {
         style: rasterStyle('https://tile.openstreetmap.org/{z}/{x}/{y}.png', OSM, 19),
         attribution: OSM,
-        // Tile Usage Policy: keine Kacheln laden, die niemand ansieht (Kamerafahrt im Video-Export)
+        // Tile usage policy: don't load tiles nobody is viewing (camera movement in video export)
         noVideo: true,
     },
     satellite: {
@@ -52,12 +52,12 @@ const styleEntry = (id) => STYLES[id] || STYLES.liberty;
 export const attributionFor = (id) => styleEntry(id).attribution;
 export const videoAllowed = (id) => !styleEntry(id).noVideo;
 
-// --- Ortsnamen der Grundkarte in der gewählten Sprache ---
+// --- Place names of the base map in the selected language ---
 
 const OVERLAY_SOURCES = new Set(['route', 'progress', 'stops', 'vehicle']);
 
-// Vektorkacheln (OpenMapTiles-Schema) enthalten name:<sprache>; die Stile zeigen sonst name_en.
-// Originalausdruck bleibt als Rückfall erhalten (z. B. lateinisch + nicht-lateinisch).
+// Vector tiles (OpenMapTiles schema) contain name:<lang>; otherwise the styles show name_en.
+// The original expression is kept as fallback (e.g. latin + non-latin).
 export function localizeLabels(map, lang = getLang()) {
     if (!map._labelFields) {
         map._labelFields = new Map();
@@ -73,7 +73,7 @@ export function localizeLabels(map, lang = getLang()) {
     }
 }
 
-// --- Fahrzeug-Icons: Emoji in einem runden Badge ---
+// --- Vehicle icons: emoji in a round badge ---
 
 function vehicleImage(id) {
     const size = 72;
@@ -94,7 +94,7 @@ function vehicleImage(id) {
     return ctx.getImageData(0, 0, size, size);
 }
 
-// --- Eigene Layer ---
+// --- Custom layers ---
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
@@ -143,7 +143,7 @@ function addOverlayLayers(map) {
                 'text-field': ['get', 'num'],
                 'text-font': FONT,
                 'text-size': 11,
-                // Immer sichtbar, verdrängt aber überlappende Labels der Grundkarte
+                // Always visible, but pushes aside overlapping labels of the base map
                 'text-allow-overlap': true,
                 'text-padding': 8,
             },
@@ -197,7 +197,7 @@ function stopFeatures(state, route) {
     return {
         type: 'FeatureCollection',
         features: state.stops.map((p, i) => {
-            // Position aus der Route übernehmen (evtl. über die Datumsgrenze verschoben), falls aktuell
+            // Take the position from the route (possibly shifted across the antimeridian) if up to date
             const r = route?.stops[i];
             const coords = r && r[1] === p.lat && (r[0] - p.lng) % 360 === 0 ? r : [p.lng, p.lat];
             return {
@@ -213,7 +213,7 @@ function setData(map, id, data) {
     map.getSource(id)?.setData(data);
 }
 
-// Kartenlayer mit Zustand und berechneter Route abgleichen
+// Sync map layers with the state and the computed route
 export function syncMap(map, state, route) {
     map._elcano = { state, route };
     if (!map.getSource('route')) return;
@@ -222,7 +222,7 @@ export function syncMap(map, state, route) {
     map.setLayoutProperty('stops-label', 'visibility', state.showLabels ? 'visible' : 'none');
 }
 
-// Animationszustand: Route gedimmt, gefahrener Teil voll, Fahrzeug an Position
+// Animation state: route dimmed, travelled part solid, vehicle at its position
 export function setAnimationFrame(map, frame) {
     const { state, route } = map._elcano || {};
     if (!map.getSource('route') || !route) return;
@@ -256,7 +256,7 @@ function registerHandlers(map) {
         }
     });
     map.on('style.load', () => {
-        // Neuer Stil: Beschriftungen neu erfassen und lokalisieren
+        // New style: collect and localize the labels again
         map._labelFields = null;
         localizeLabels(map);
         addOverlayLayers(map);
@@ -282,7 +282,7 @@ export function setMapStyle(map, id) {
     map.setStyle(styleEntry(id).style, { diff: false });
 }
 
-// Logische Größe so wählen, dass die Karte ähnlich detailliert wirkt wie am Bildschirm
+// Choose the logical size so the map looks about as detailed as on screen
 const LOGICAL_MAX = 1280;
 
 export async function createOffscreenMap(state, route, width, height) {
@@ -317,7 +317,7 @@ export async function createOffscreenMap(state, route, width, height) {
     };
 }
 
-// Warten bis alle Kacheln/Daten geladen und gerendert sind (mit Zeitlimit)
+// Wait until all tiles/data are loaded and rendered (with timeout)
 export function waitIdle(map, timeout = 20000) {
     return new Promise((resolve) => {
         let done = false;

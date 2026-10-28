@@ -1,4 +1,4 @@
-// Geometrie-Hilfsfunktionen (Koordinaten immer als [lng, lat], Distanzen in km)
+// Geometry helpers (coordinates always as [lng, lat], distances in km)
 
 const EARTH_RADIUS_KM = 6371.0088;
 const toRad = (d) => d * Math.PI / 180;
@@ -16,7 +16,7 @@ export function haversine(a, b) {
     return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// Kompassrichtung von a nach b in Grad (0 = Norden, im Uhrzeigersinn)
+// Compass bearing from a to b in degrees (0 = north, clockwise)
 export function bearing(a, b) {
     const φ1 = toRad(a[1]);
     const φ2 = toRad(b[1]);
@@ -26,7 +26,7 @@ export function bearing(a, b) {
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
-// Längengrade stetig machen, damit Linien über den 180. Meridian nicht springen
+// Make longitudes continuous so lines crossing the 180th meridian don't jump
 export function unwrap(coords) {
     const out = [coords[0].slice()];
     for (let i = 1; i < coords.length; i++) {
@@ -39,7 +39,7 @@ export function unwrap(coords) {
     return out;
 }
 
-// Großkreis zwischen a und b, Punktdichte abhängig von der Distanz
+// Great circle between a and b, point density depending on distance
 export function greatCircle(a, b) {
     const φ1 = toRad(a[1]), λ1 = toRad(a[0]);
     const φ2 = toRad(b[1]), λ2 = toRad(b[0]);
@@ -59,7 +59,7 @@ export function greatCircle(a, b) {
     return unwrap(coords);
 }
 
-// Kumulierte Distanzen je Stützpunkt
+// Cumulative distance per vertex
 export function cumulative(coords) {
     const cum = [0];
     for (let i = 1; i < coords.length; i++) {
@@ -77,7 +77,7 @@ function indexAt(cum, d) {
     return lo;
 }
 
-// Punkt und Fahrtrichtung bei Distanz d entlang der Linie
+// Point and direction of travel at distance d along the line
 export function pointAlong(coords, cum, d) {
     if (coords.length < 2) return { point: coords[0], bearing: 0 };
     const total = cum[cum.length - 1];
@@ -93,7 +93,7 @@ export function pointAlong(coords, cum, d) {
     };
 }
 
-// Teilstück der Linie vom Anfang bis Distanz d
+// Part of the line from the start up to distance d
 export function sliceLine(coords, cum, d) {
     const { point, index } = pointAlong(coords, cum, d);
     if (index === undefined) return coords.slice();

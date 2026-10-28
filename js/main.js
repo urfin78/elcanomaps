@@ -1,4 +1,4 @@
-// UI-Verdrahtung: Sidebar <-> Datenmodell <-> Karte
+// UI wiring: sidebar <-> data model <-> map
 
 import {
     state, update, replace, subscribe, shareUrl,
@@ -17,7 +17,7 @@ const options = (entries, selected) => entries
     .map(([value, label]) => `<option value="${esc(value)}"${value === selected ? ' selected' : ''}>${esc(label)}</option>`)
     .join('');
 
-// Beispielroute; Ortsnamen und Titel in der aktuellen Sprache
+// Sample route; place names and title in the current language
 const DEMO_COORDS = [[9.9937, 53.5511], [13.405, 52.52], [14.4378, 50.0755], [16.3738, 48.2082], [-9.1393, 38.7223], [-9.3817, 38.8029]];
 const DEMO_MODES = ['train', 'car', 'car', 'flight', 'bike'];
 
@@ -45,7 +45,7 @@ function toast(msg) {
     toastTimer = setTimeout(() => { el.hidden = true; }, 4000);
 }
 
-// --- Route berechnen ---
+// --- Compute route ---
 
 let route = null;
 let routeKey = '';
@@ -92,7 +92,7 @@ function renderStatus() {
     $('route-status').textContent = text;
 }
 
-// --- Stopps-Liste ---
+// --- Stop list ---
 
 function segmentHtml(i) {
     const seg = state.segments[i];
@@ -161,7 +161,7 @@ $('stops').addEventListener('dragend', () => {
     renderStops();
 });
 
-// --- Ortssuche ---
+// --- Place search ---
 
 const searchInput = $('search');
 const resultsEl = $('search-results');
@@ -210,7 +210,7 @@ searchInput.addEventListener('input', () => {
         hideResults();
         return;
     }
-    // Debounce: Photon nicht bei jedem Tastendruck anfragen
+    // Debounce: don't query Photon on every keystroke
     searchTimer = setTimeout(() => runSearch(q), 350);
 });
 
@@ -228,7 +228,7 @@ searchInput.addEventListener('keydown', (e) => {
     }
 });
 
-// mousedown statt click, damit der Blur des Eingabefelds nicht zuerst schließt
+// mousedown instead of click, so the input's blur doesn't close the list first
 resultsEl.addEventListener('mousedown', (e) => {
     const li = e.target.closest('li');
     if (!li) return;
@@ -239,11 +239,11 @@ searchInput.addEventListener('blur', () => setTimeout(hideResults, 150));
 
 $('demo').addEventListener('click', () => replace({ ...state, ...demoRoute() }));
 
-// --- Karte & Export-Einstellungen ---
+// --- Map & export settings ---
 
 const presetLabel = (k, p) => (p.width ? `${t(`format.${k}`)} (${p.width}×${p.height})` : t(`format.${k}`));
 
-// Auswahllisten mit übersetzten Beschriftungen (bei Sprachwechsel neu)
+// Select options with translated labels (rebuilt on language change)
 function renderOptions() {
     $('lang').innerHTML = options(Object.entries(LANGUAGES), getLang());
     $('style').innerHTML = options(Object.keys(STYLES).map((k) => [k, t(`style.${k}`)]), state.style);
@@ -254,7 +254,7 @@ function renderOptions() {
 renderOptions();
 $('lang').addEventListener('change', (e) => setLang(e.target.value));
 
-// Nur bei Abweichung setzen, sonst springt der Cursor beim Tippen ans Ende
+// Only set when different, otherwise the cursor jumps to the end while typing
 function setValue(id, value) {
     const el = $(id);
     if (el.value !== String(value)) el.value = value;
@@ -276,7 +276,7 @@ function renderControls() {
     setValue('vid-duration', state.video.duration);
     setValue('vid-fps', state.video.fps);
     setValue('vid-type', state.video.type);
-    // Laufenden Export weiter abbrechbar lassen
+    // Keep a running export cancellable
     const noVideo = !videoAllowed(state.style);
     $('vid-export').disabled = noVideo && !exportAbort;
     $('vid-export').textContent = t(exportAbort ? 'video.cancel' : 'video.export');
@@ -309,7 +309,7 @@ bind('vid-duration', 'change', (s, t) => { s.video.duration = Math.min(120, Math
 bind('vid-fps', 'change', (s, t) => { s.video.fps = Number(t.value); });
 bind('vid-type', 'change', (s, t) => { s.video.type = t.value; });
 
-// --- Vorschau-Animation auf der Hauptkarte ---
+// --- Preview animation on the main map ---
 
 let preview = null;
 
@@ -415,7 +415,7 @@ $('vid-export').addEventListener('click', async () => {
     }
 });
 
-// --- Speichern & Teilen ---
+// --- Save & share ---
 
 $('share').addEventListener('click', async () => {
     const url = shareUrl(state);
@@ -470,7 +470,7 @@ $('clear').addEventListener('click', () => {
     });
 });
 
-// --- Reaktion auf Zustandsänderungen ---
+// --- React to state changes ---
 
 let currentStyle = state.style;
 
@@ -488,14 +488,14 @@ function render() {
 subscribe(render);
 render();
 
-// Sprachwechsel: statische Texte, Auswahllisten, Stoppliste, Status und Kartenbeschriftung
+// Language change: static texts, select options, stop list, status and map labels
 onLangChange((lang) => {
     translateDom();
     renderOptions();
     renderStops();
     renderControls();
     renderStatus();
-    // Nicht isStyleLoaded(): ist false, solange Kacheln nachladen. Ohne erfasste
-    // Beschriftungen lokalisiert der style.load-Handler ohnehin mit der neuen Sprache.
+    // Not isStyleLoaded(): it is false while tiles are loading. Without collected
+    // labels the style.load handler localizes with the new language anyway.
     if (map._labelFields) localizeLabels(map, lang);
 });

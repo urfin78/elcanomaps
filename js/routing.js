@@ -1,11 +1,11 @@
-// Ortssuche (Photon) und Routing (FOSSGIS OSRM) bzw. Großkreis für nicht routbare Abschnitte
+// Place search (Photon) and routing (FOSSGIS OSRM) or great circle for legs that can't be routed
 
 import { MODES, vehicleOf } from './state.js';
 import { greatCircle, cumulative, bbox } from './geo.js';
 import { t, getLang } from './i18n.js';
 
 const PHOTON_URL = 'https://photon.komoot.io/api/';
-// Sprachen, die der öffentliche Photon-Server unterstützt; sonst Namen in Landessprache
+// Languages supported by the public Photon server; otherwise names in the local language
 const PHOTON_LANGS = new Set(['de', 'en', 'fr']);
 const OSRM_URL = 'https://routing.openstreetmap.de';
 const OSRM_PROFILES = { car: 'routed-car', bike: 'routed-bike', foot: 'routed-foot' };
@@ -16,7 +16,7 @@ export async function searchPlaces(query, { signal, near, zoom } = {}) {
     if (near) {
         params.set('lon', near[0].toFixed(3));
         params.set('lat', near[1].toFixed(3));
-        // Ohne zoom nimmt Photon 16 (Straßenebene) an und bevorzugt nahe Straßen statt Städten
+        // Without zoom Photon assumes 16 (street level) and prefers nearby streets over cities
         params.set('zoom', String(Math.round(zoom ?? 4)));
     }
     const res = await fetch(`${PHOTON_URL}?${params}`, { signal });
@@ -32,14 +32,14 @@ export async function searchPlaces(query, { signal, near, zoom } = {}) {
             lat: f.geometry.coordinates[1],
         };
     });
-    // Gleich beschriftete Treffer (z. B. Straße und Haltestelle) nur einmal anzeigen
+    // Show results with the same label (e.g. street and bus stop) only once
     return results.filter((r, i) => results.findIndex((o) => o.label === r.label) === i);
 }
 
-// Cache über Promises, damit identische Anfragen nicht doppelt laufen
+// Cache promises so identical requests don't run twice
 const cache = new Map();
 
-// FOSSGIS-Nutzungsbedingungen: höchstens eine Routing-Anfrage pro Sekunde
+// FOSSGIS terms of use: at most one routing request per second
 const MIN_INTERVAL = 1000;
 let nextSlot = 0;
 
@@ -70,12 +70,12 @@ function fetchRoute(mode, a, b) {
     return cache.get(key);
 }
 
-// Geometrie aller Abschnitte berechnen; Fehler fallen auf Luftlinie zurück
+// Compute the geometry of all legs; errors fall back to a straight line
 export async function buildRoute(state) {
     const segments = [];
     const errors = [];
     let prevEnd = null;
-    // Stopp-Positionen passend zur (ggf. über die Datumsgrenze verschobenen) Linie
+    // Stop positions matching the line (possibly shifted across the antimeridian)
     const stops = state.stops.slice(0, 1).map((p) => [p.lng, p.lat]);
     for (let i = 0; i < state.segments.length; i++) {
         const seg = state.segments[i];
@@ -92,7 +92,7 @@ export async function buildRoute(state) {
         } else {
             coords = greatCircle(a, b);
         }
-        // An das Ende des vorherigen Abschnitts anschließen (Datumsgrenze)
+        // Connect to the end of the previous leg (antimeridian)
         if (prevEnd) {
             const shift = Math.round((prevEnd[0] - coords[0][0]) / 360) * 360;
             if (shift) coords = coords.map(([x, y]) => [x + shift, y]);
