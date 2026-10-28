@@ -45,6 +45,21 @@ class Handler(SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write(fmt % args + "\n")
 
+    def parse_request(self):
+        if not super().parse_request():
+            return False
+        # Only accept requests addressed to this server from its own pages:
+        # Host guards against DNS rebinding, Origin against cross-site requests
+        port = self.server.server_address[1]
+        hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
+        origin = self.headers.get("Origin")
+        if self.headers.get("Host") not in hosts or (
+            origin is not None and origin not in {f"http://{h}" for h in hosts}
+        ):
+            self.send_error(403)
+            return False
+        return True
+
 
 if __name__ == "__main__":
     port = int(sys.argv[1])
